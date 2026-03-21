@@ -1,6 +1,7 @@
 local M = {}
 
-local cache = require("pprof.cache")
+local cache  = require("pprof.cache")
+local config = require("pprof.config")
 
 local _state = {
   bufnr = nil,
@@ -63,19 +64,25 @@ local function float_config(lines)
     if w > max_w then max_w = w end
   end
 
-  local width = math.max(25, math.min(max_w + 2, vim.o.columns - 4))
-  local height = math.max(3, math.min(#lines, vim.o.lines - 6))
+  local peek_cfg = config.opts.peek or {}
 
-  return {
+  local width  = (peek_cfg.width  and peek_cfg.width  > 0)
+    and math.floor(vim.o.columns * peek_cfg.width)
+    or  math.max(25, math.min(max_w + 2, vim.o.columns - 4))
+  local height = (peek_cfg.height and peek_cfg.height > 0)
+    and math.floor(vim.o.lines * peek_cfg.height)
+    or  math.max(3, math.min(#lines, vim.o.lines - 6))
+
+  return vim.tbl_extend("force", {
     relative = "cursor",
     row = 1,
     col = 0,
     width = width,
     height = height,
-    border = "rounded",
+    border = peek_cfg.border or "rounded",
     style = "minimal",
     noautocmd = false,
-  }
+  }, peek_cfg.window or {})
 end
 
 --- Navigate to the function name found on the line under cursor.
@@ -156,11 +163,17 @@ function M.show(peek_data)
   local cfg = float_config(lines)
   local win = vim.api.nvim_open_win(bufnr, true, cfg)
 
+  local peek_hl = (config.opts.peek and config.opts.peek.highlights) or {}
+  vim.api.nvim_set_hl(0, "PprofPeekBorder",     peek_hl.border      or { link = "FloatBorder" })
+  vim.api.nvim_set_hl(0, "PprofPeekNormal",     peek_hl.normal      or { link = "NormalFloat" })
+  vim.api.nvim_set_hl(0, "PprofPeekCursorLine", peek_hl.cursor_line or { link = "CursorLine" })
+
   vim.wo[win].cursorline = true
   vim.wo[win].number = false
   vim.wo[win].relativenumber = false
   vim.wo[win].wrap = false
   vim.wo[win].signcolumn = "no"
+  vim.wo[win].winhighlight = "Normal:PprofPeekNormal,FloatBorder:PprofPeekBorder,CursorLine:PprofPeekCursorLine"
 
   _state.bufnr = bufnr
   _state.win = win

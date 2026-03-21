@@ -1,6 +1,7 @@
 local M = {}
 
-local cache = require("pprof.cache")
+local cache  = require("pprof.cache")
+local config = require("pprof.config")
 
 local _state = {
   bufnr = nil,
@@ -11,6 +12,16 @@ local _state = {
 
 local HEADER_HL = "PprofTopHeader"
 local COLHDR_HL = "PprofTopColHeader"
+
+--- Define highlight groups for the top window from config.
+local function setup_highlights()
+  local top_hl = (config.opts.top and config.opts.top.highlights) or {}
+  vim.api.nvim_set_hl(0, HEADER_HL,          top_hl.header        or { link = "Title" })
+  vim.api.nvim_set_hl(0, COLHDR_HL,          top_hl.column_header or { link = "Comment" })
+  vim.api.nvim_set_hl(0, "PprofTopBorder",     top_hl.border      or { link = "FloatBorder" })
+  vim.api.nvim_set_hl(0, "PprofTopNormal",     top_hl.normal      or { link = "NormalFloat" })
+  vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line or { link = "CursorLine" })
+end
 
 --- Format a single row for a TopEntry, aligned to fixed columns.
 --- Columns: flat(8) flat%(7) sum%(6) cum(8) cum%(7) function
@@ -56,22 +67,28 @@ local function float_config(lines)
     if w > max_w then max_w = w end
   end
 
-  local width = math.max(25, math.min(max_w + 2, vim.o.columns - 4))
-  local height = math.max(3, math.min(#lines, vim.o.lines - 4))
+  local top_cfg = config.opts.top or {}
+
+  local width  = (top_cfg.width  and top_cfg.width  > 0)
+    and math.floor(vim.o.columns * top_cfg.width)
+    or  math.max(25, math.min(max_w + 2, vim.o.columns - 4))
+  local height = (top_cfg.height and top_cfg.height > 0)
+    and math.floor(vim.o.lines * top_cfg.height)
+    or  math.max(3, math.min(#lines, vim.o.lines - 4))
 
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
 
-  return {
+  return vim.tbl_extend("force", {
     relative = "editor",
     row = row,
     col = col,
     width = width,
     height = height,
-    border = "rounded",
+    border = top_cfg.border or "rounded",
     style = "minimal",
     noautocmd = false,
-  }
+  }, top_cfg.window or {})
 end
 
 local function close_win()
@@ -174,6 +191,8 @@ function M.show(entries, total_str)
   -- Close existing window if open
   M.close()
 
+  setup_highlights()
+
   _state.total_str = total_str
   _state.entries = entries
 
@@ -202,6 +221,7 @@ function M.show(entries, total_str)
   vim.wo[win].relativenumber = false
   vim.wo[win].wrap = false
   vim.wo[win].signcolumn = "no"
+  vim.wo[win].winhighlight = "Normal:PprofTopNormal,FloatBorder:PprofTopBorder,CursorLine:PprofTopCursorLine"
 
   _state.bufnr = bufnr
   _state.win = win

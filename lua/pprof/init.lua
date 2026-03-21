@@ -34,7 +34,7 @@ local function apply_to_open_buffers()
           if signs_active() then
             signs.show(bufnr)
           end
-          if config.opts.hints and config.opts.hints.enabled then
+          if config.opts.line_hints and config.opts.line_hints.enabled then
             hints.show(bufnr)
           end
         end
@@ -129,7 +129,7 @@ local function register_autocmds()
       if signs_active() then
         signs.show(ev.buf)
       end
-      if config.opts.hints and config.opts.hints.enabled then
+      if config.opts.line_hints and config.opts.line_hints.enabled then
         hints.show(ev.buf)
       end
     end,

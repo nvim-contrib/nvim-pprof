@@ -5,7 +5,6 @@ local cache     = require("pprof.cache")
 local util      = require("pprof.util")
 local highlight = require("pprof.highlight")
 
-local sign_group      = "pprof"
 local sign_prefix     = "PprofHeat"
 local default_priority = 10
 
@@ -30,14 +29,25 @@ local function get_buf_filepath(bufnr)
   return vim.fn.resolve(vim.fn.fnamemodify(name, ":p"))
 end
 
+local function level_text(i, levels, signs_opts)
+  local t = levels <= 1 and 1.0 or (i - 1) / (levels - 1)
+  if t <= 1 / 3 then
+    return (signs_opts.cold and signs_opts.cold.text) or "▎"
+  elseif t <= 2 / 3 then
+    return (signs_opts.warm and signs_opts.warm.text) or "▎"
+  else
+    return (signs_opts.hot and signs_opts.hot.text) or "▎"
+  end
+end
+
 local function ensure_signs_defined()
   if signs_defined then return end
   local levels = (config.opts.signs and config.opts.signs.heat_levels) or 5
   highlight.setup(levels)
-  local text = (config.opts.signs and config.opts.signs.text) or "▎"
+  local signs_opts = config.opts.signs or {}
   for i = 1, levels do
     vim.fn.sign_define(sign_prefix .. i, {
-      text   = text,
+      text   = level_text(i, levels, signs_opts),
       texthl = sign_prefix .. i,
     })
   end
@@ -78,6 +88,7 @@ function M.show(bufnr)
   if not annotations or #annotations == 0 then return end
 
   local opts       = config.opts.signs or {}
+  local sg         = opts.group or "pprof"
   local levels     = get_heat_levels()
   local use_signhl = opts.signhl
   local use_numhl  = opts.numhl
@@ -86,7 +97,7 @@ function M.show(bufnr)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
 
   -- Clear previous state
-  vim.fn.sign_unplacelist({ { buffer = bufnr, group = sign_group } })
+  vim.fn.sign_unplacelist({ { buffer = bufnr, group = sg } })
   vim.api.nvim_buf_clear_namespace(bufnr, ns_num,  0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_line, 0, -1)
 
@@ -104,7 +115,7 @@ function M.show(bufnr)
     if use_signhl then
       place_list[#place_list + 1] = {
         buffer   = bufnr,
-        group    = sign_group,
+        group    = sg,
         name     = sign_prefix .. level,
         lnum     = lnum,
         priority = default_priority,
@@ -141,7 +152,8 @@ end
 function M.hide(bufnr)
   bufnr = get_bufnr(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then return end
-  vim.fn.sign_unplacelist({ { buffer = bufnr, group = sign_group } })
+  local sg = (config.opts.signs and config.opts.signs.group) or "pprof"
+  vim.fn.sign_unplacelist({ { buffer = bufnr, group = sg } })
   vim.api.nvim_buf_clear_namespace(bufnr, ns_num,  0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_line, 0, -1)
   visible[bufnr] = false

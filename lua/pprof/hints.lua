@@ -68,7 +68,7 @@ function M.show(bufnr)
   end
 
   local opts = config.opts
-  local fmt = (opts.hints and opts.hints.format) or "{flat} flat | {cum} cum"
+  local fmt = (opts.line_hints and opts.line_hints.format) or "{flat} flat | {cum} cum"
 
   -- Clear existing marks first
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
@@ -88,7 +88,7 @@ function M.show(bufnr)
       local hint_text = format_hint(fmt, line.flat_str, line.cum_str)
       vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
         virt_text = { { hint_text, HL_GROUP } },
-        virt_text_pos = "eol",
+        virt_text_pos = (config.opts.line_hints and config.opts.line_hints.position) or "eol",
         hl_mode = "combine",
       })
     end
