@@ -1,0 +1,78 @@
+File: demo-pprof
+Type: cpu
+Time: 2026-03-21 13:02:45 +04
+Duration: 6.44s, Total samples = 6.42s (99.65%)
+Showing nodes accounting for 6.19s, 96.42% of 6.42s total
+Dropped 76 nodes (cum <= 0.03s)
+      flat  flat%   sum%        cum   cum%
+     2.56s 39.88% 39.88%      2.56s 39.88%  runtime.madvise
+     0.79s 12.31% 52.18%      0.86s 13.40%  main.matrixMultiply (inline)
+     0.64s  9.97% 62.15%      0.64s  9.97%  runtime.kevent
+     0.53s  8.26% 70.40%      0.53s  8.26%  runtime.asyncPreempt
+     0.43s  6.70% 77.10%      0.53s  8.26%  math.tan
+     0.22s  3.43% 80.53%      0.22s  3.43%  runtime.pthread_cond_signal
+     0.21s  3.27% 83.80%      0.25s  3.89%  math.sin
+     0.17s  2.65% 86.45%      0.17s  2.65%  runtime.pthread_kill
+     0.16s  2.49% 88.94%      0.22s  3.43%  math.cos
+     0.11s  1.71% 90.65%      0.11s  1.71%  math.IsNaN (inline)
+     0.09s  1.40% 92.06%      0.09s  1.40%  math.IsInf (inline)
+     0.08s  1.25% 93.30%      0.08s  1.25%  runtime.pthread_cond_wait
+     0.04s  0.62% 93.93%      0.60s  9.35%  main.sortWorkload
+     0.04s  0.62% 94.55%      1.05s 16.36%  main.trigWorkload
+     0.03s  0.47% 95.02%      0.13s  2.02%  cmp.Less[go.shape.float64] (inline)
+     0.03s  0.47% 95.48%      0.06s  0.93%  runtime.scanobject
+     0.03s  0.47% 95.95%      0.38s  5.92%  slices.partialInsertionSortOrdered[go.shape.float64]
+     0.02s  0.31% 96.26%      0.16s  2.49%  slices.reverseRangeOrdered[go.shape.float64] (inline)
+     0.01s  0.16% 96.42%      0.23s  3.58%  math.Cos (inline)
+         0     0% 96.42%      2.58s 40.19%  main.main
+         0     0% 96.42%      0.05s  0.78%  main.runAllocateWorkloads
+         0     0% 96.42%      2.52s 39.25%  main.runComputeWorkloads
+         0     0% 96.42%      0.25s  3.89%  math.Sin (inline)
+         0     0% 96.42%      0.53s  8.26%  math.Tan (inline)
+         0     0% 96.42%      0.04s  0.62%  runtime.(*gcControllerState).enlistWorker
+         0     0% 96.42%      0.04s  0.62%  runtime.(*gcWork).balance
+         0     0% 96.42%      2.55s 39.72%  runtime.(*mheap).alloc.func1
+         0     0% 96.42%      2.55s 39.72%  runtime.(*mheap).allocSpan
+         0     0% 96.42%      0.05s  0.78%  runtime.bgsweep
+         0     0% 96.42%      0.11s  1.71%  runtime.findRunnable
+         0     0% 96.42%      0.11s  1.71%  runtime.forEachPInternal
+         0     0% 96.42%      0.09s  1.40%  runtime.gcBgMarkWorker
+         0     0% 96.42%      0.15s  2.34%  runtime.gcBgMarkWorker.func2
+         0     0% 96.42%      0.15s  2.34%  runtime.gcDrain
+         0     0% 96.42%      0.15s  2.34%  runtime.gcDrainMarkWorkerDedicated (inline)
+         0     0% 96.42%      0.10s  1.56%  runtime.gcMarkDone.forEachP.func5
+         0     0% 96.42%      0.04s  0.62%  runtime.gcMarkTermination.func3
+         0     0% 96.42%      0.62s  9.66%  runtime.gcStart.func4
+         0     0% 96.42%      0.17s  2.65%  runtime.gopreempt_m (partial-inline)
+         0     0% 96.42%      0.18s  2.80%  runtime.goschedImpl
+         0     0% 96.42%      0.08s  1.25%  runtime.mPark (inline)
+         0     0% 96.42%      2.58s 40.19%  runtime.main
+         0     0% 96.42%      0.04s  0.62%  runtime.makeslice
+         0     0% 96.42%      0.04s  0.62%  runtime.mallocgc
+         0     0% 96.42%      0.06s  0.93%  runtime.markroot
+         0     0% 96.42%      0.05s  0.78%  runtime.markroot.func1
+         0     0% 96.42%      0.14s  2.18%  runtime.mcall
+         0     0% 96.42%      0.15s  2.34%  runtime.morestack
+         0     0% 96.42%      0.64s  9.97%  runtime.netpoll
+         0     0% 96.42%      0.15s  2.34%  runtime.newstack
+         0     0% 96.42%      0.08s  1.25%  runtime.notesleep
+         0     0% 96.42%      0.22s  3.43%  runtime.notewakeup
+         0     0% 96.42%      0.11s  1.71%  runtime.park_m
+         0     0% 96.42%      0.17s  2.65%  runtime.preemptM
+         0     0% 96.42%      0.10s  1.56%  runtime.preemptall
+         0     0% 96.42%      0.14s  2.18%  runtime.preemptone
+         0     0% 96.42%      0.14s  2.18%  runtime.schedule
+         0     0% 96.42%      0.09s  1.40%  runtime.semasleep
+         0     0% 96.42%      0.22s  3.43%  runtime.semawakeup
+         0     0% 96.42%      0.17s  2.65%  runtime.signalM (inline)
+         0     0% 96.42%      0.66s 10.28%  runtime.startTheWorldWithSema
+         0     0% 96.42%      0.20s  3.12%  runtime.startm
+         0     0% 96.42%      0.08s  1.25%  runtime.stopm
+         0     0% 96.42%      0.05s  0.78%  runtime.sweepone
+         0     0% 96.42%      2.55s 39.72%  runtime.sysUsed (inline)
+         0     0% 96.42%      2.55s 39.72%  runtime.sysUsedOS (inline)
+         0     0% 96.42%      3.50s 54.52%  runtime.systemstack
+         0     0% 96.42%      0.20s  3.12%  runtime.wakep
+         0     0% 96.42%      0.54s  8.41%  slices.Sort[go.shape.[]float64,go.shape.float64] (inline)
+         0     0% 96.42%      0.54s  8.41%  slices.pdqsortOrdered[go.shape.float64]
+         0     0% 96.42%      0.54s  8.41%  sort.Float64s

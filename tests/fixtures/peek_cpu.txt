@@ -1,0 +1,13 @@
+File: demo-pprof
+Type: cpu
+Time: 2026-03-21 13:02:45 +04
+Duration: 6.44s, Total samples = 6.42s (99.65%)
+Showing nodes accounting for 6.42s, 100% of 6.42s total
+----------------------------------------------------------+-------------
+      flat  flat%   sum%        cum   cum%   calls calls% + context
+----------------------------------------------------------+-------------
+                                             0.86s   100% |   main.runComputeWorkloads (inline)
+     0.79s 12.31% 12.31%      0.86s 13.40%                | main.matrixMultiply
+                                             0.06s  6.98% |   runtime.asyncPreempt
+                                             0.01s  1.16% |   runtime.makeslice
+----------------------------------------------------------+-------------
