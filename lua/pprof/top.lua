@@ -23,19 +23,19 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line or { link = "CursorLine" })
 end
 
---- Format a single row for a TopEntry, aligned to fixed columns.
---- Columns: flat(8) flat%(7) sum%(6) cum(8) cum%(7) function
+--- Format a single row for a TopEntry, function name first.
 --- @param entry TopEntry
+--- @param name_w integer  width of the function name column
 --- @return string
-local function format_row(entry)
+local function format_row(entry, name_w)
   return string.format(
-    "  %8s  %6.2f%%  %6.2f%%  %8s  %6.2f%%  %s",
+    "  %-" .. name_w .. "s  %8s  %6.2f%%  %6.2f%%  %8s  %6.2f%%",
+    entry.func_name,
     entry.flat_str,
     entry.flat_pct,
     entry.sum_pct,
     entry.cum_str,
-    entry.cum_pct,
-    entry.func_name
+    entry.cum_pct
   )
 end
 
@@ -44,15 +44,22 @@ end
 --- @param total_str string
 --- @return string[]
 local function build_lines(entries, total_str)
+  local name_w = #"function"
+  for _, entry in ipairs(entries) do
+    if #entry.func_name > name_w then
+      name_w = #entry.func_name
+    end
+  end
+
   local lines = {}
   lines[#lines + 1] = string.format("Top Functions (total: %s)", total_str)
   lines[#lines + 1] = string.format(
-    "  %8s  %6s   %6s   %8s  %6s   %s",
-    "flat", "flat%", "sum%", "cum", "cum%", "function"
+    "  %-" .. name_w .. "s  %8s  %6s   %6s   %8s  %6s",
+    "function", "flat", "flat%", "sum%", "cum", "cum%"
   )
-  lines[#lines + 1] = string.rep("─", 70)
+  lines[#lines + 1] = string.rep("─", vim.fn.strdisplaywidth(lines[2]))
   for _, entry in ipairs(entries) do
-    lines[#lines + 1] = format_row(entry)
+    lines[#lines + 1] = format_row(entry, name_w)
   end
   return lines
 end
