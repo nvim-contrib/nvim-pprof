@@ -17,6 +17,7 @@ describe("config.setup()", function()
     assert.is_false(config.opts.signs.linehl)
     assert.is_false(config.opts.hints.enabled)
     assert.equals(20, config.opts.top.default_count)
+    assert.is_true(config.opts.commands)
   end)
 
   it("merges user options over defaults", function()

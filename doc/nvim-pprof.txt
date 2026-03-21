@@ -28,6 +28,10 @@ Valid keys for {opts}:
         `go tool pprof`; any other value is invoked directly.
         Defaults to: `"go"`
 
+    commands: ~
+        Boolean. When true, register `:PProf*` user commands on setup.
+        Defaults to: `true`
+
     signs.heat_levels: ~
         Integer >= 1. Number of discrete heat gradient levels used for
         sign highlighting.

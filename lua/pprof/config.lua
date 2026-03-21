@@ -2,6 +2,7 @@ local M = {}
 
 local defaults = {
 	pprof_bin = "go",
+	commands = true,
 	signs = {
 		heat_levels = 5,
 		priority    = 10,

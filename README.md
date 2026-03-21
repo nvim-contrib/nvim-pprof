@@ -68,6 +68,8 @@ The `setup` function accepts an optional table to override any defaults:
 require("pprof").setup({
   -- Path to the Go binary used to invoke `go tool pprof`
   pprof_bin = "go",
+  -- Register :PProf* commands (default: true)
+  commands = true,
   -- Sign column display options
   signs = {
     -- Number of heat gradient levels (1-5)

@@ -148,19 +148,33 @@ local function register_commands()
     M.load(path, a.bang)
   end, { nargs = "?", bang = true, complete = "file" })
 
-  def("PProfSigns", function(a)
-    local action = a.args ~= "" and a.args or "toggle"
-    if action == "show" then M.show_signs()
-    elseif action == "hide" then M.hide_signs()
-    else M.toggle_signs() end
-  end, { nargs = "?" })
+  local function action_complete()
+    return { "show", "hide", "toggle" }
+  end
 
-  def("PProfHints", function(a)
-    local action = a.args ~= "" and a.args or "toggle"
-    if action == "show" then M.show_hints()
-    elseif action == "hide" then M.hide_hints()
-    else M.toggle_hints() end
-  end, { nargs = "?" })
+  local function action_cmd(actions)
+    return function(a)
+      local action = a.args ~= "" and a.args or "toggle"
+      local fn = actions[action]
+      if fn then
+        fn()
+      else
+        vim.notify("Invalid action: " .. action, vim.log.levels.ERROR)
+      end
+    end
+  end
+
+  def("PProfSigns", action_cmd({
+    show = M.show_signs,
+    hide = M.hide_signs,
+    toggle = M.toggle_signs,
+  }), { nargs = "?", complete = action_complete })
+
+  def("PProfHints", action_cmd({
+    show = M.show_hints,
+    hide = M.hide_hints,
+    toggle = M.toggle_hints,
+  }), { nargs = "?", complete = action_complete })
 
   def("PProfTop", function(a)
     local count = a.args ~= "" and tonumber(a.args) or nil
@@ -181,7 +195,9 @@ end
 function M.setup(opts)
   config.setup(opts)
   highlight.setup(config.opts.signs and config.opts.signs.heat_levels or 5)
-  register_commands()
+  if config.opts.commands then
+    register_commands()
+  end
   register_autocmds()
   require("pprof.lsp").setup()
 end
