@@ -1,0 +1,146 @@
+Total: 6.42s
+ROUTINE ======================== main.fibonacciIterative in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/compute.go
+      10ms       10ms (flat, cum)  0.16% of Total
+         .          .     63:func fibonacciIterative(n int) uint64 {
+         .          .     64:	a, b := uint64(0), uint64(1)
+      10ms       10ms     65:	for i := 0; i < n; i++ {
+         .          .     66:		a, b = b, a+b
+         .          .     67:	}
+         .          .     68:	return a
+         .          .     69:}
+         .          .     70:
+ROUTINE ======================== main.main in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/main.go
+         0      2.58s (flat, cum) 40.19% of Total
+         .          .     10:func main() {
+         .          .     11:	// CPU profiling
+         .          .     12:	cpuFile, err := os.Create("cpu.prof")
+         .          .     13:	if err != nil {
+         .          .     14:		log.Fatal(err)
+         .          .     15:	}
+         .          .     16:	defer cpuFile.Close()
+         .          .     17:
+         .          .     18:	if err := pprof.StartCPUProfile(cpuFile); err != nil {
+         .          .     19:		log.Fatal(err)
+         .          .     20:	}
+         .          .     21:	defer pprof.StopCPUProfile()
+         .          .     22:
+         .          .     23:	log.Println("Starting CPU profiling workload...")
+         .      2.52s     24:	runComputeWorkloads()
+         .       10ms     25:	log.Println("CPU profiling complete")
+         .          .     26:
+         .          .     27:	// Memory profiling
+         .          .     28:	log.Println("Starting memory profiling workload...")
+         .       50ms     29:	runAllocateWorkloads()
+         .          .     30:	log.Println("Memory profiling complete")
+         .          .     31:
+         .          .     32:	runtime.GC()
+         .          .     33:
+         .          .     34:	memFile, err := os.Create("mem.prof")
+ROUTINE ======================== main.matrixMultiply in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/compute.go
+     790ms      860ms (flat, cum) 13.40% of Total
+         .          .     10:func matrixMultiply(a, b [][]float64, n int) [][]float64 {
+         .          .     11:	c := make([][]float64, n)
+         .          .     12:	for i := 0; i < n; i++ {
+         .       10ms     13:		c[i] = make([]float64, n)
+         .          .     14:		for k := 0; k < n; k++ {
+         .          .     15:			for j := 0; j < n; j++ {
+     790ms      850ms     16:				c[i][j] += a[i][k] * b[k][j]
+         .          .     17:			}
+         .          .     18:		}
+         .          .     19:	}
+         .          .     20:	return c
+         .          .     21:}
+ROUTINE ======================== main.runAllocateWorkloads in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/allocate.go
+         0       50ms (flat, cum)  0.78% of Total
+         .          .     73:func runAllocateWorkloads() {
+         .          .     74:	globalAllocs = make([]interface{}, 0)
+         .          .     75:
+         .          .     76:	for pass := 0; pass < 5; pass++ {
+         .          .     77:		// Direct slice allocations with retention
+         .          .     78:		tempSlices := make([][]byte, 50000)
+         .          .     79:		for i := 0; i < 50000; i++ {
+         .       20ms     80:			tempSlices[i] = make([]byte, 4096)
+         .          .     81:		}
+         .          .     82:		globalAllocs = append(globalAllocs, tempSlices)
+         .          .     83:
+         .          .     84:		// Map allocations with retention
+         .          .     85:		tempMap := make(map[int][]byte)
+         .          .     86:		for i := 0; i < 100000; i++ {
+         .       20ms     87:			tempMap[i] = make([]byte, 256)
+         .          .     88:		}
+         .          .     89:		globalAllocs = append(globalAllocs, tempMap)
+         .          .     90:
+         .          .     91:		// Slice append allocations with retention
+         .          .     92:		tempSliceAppend := make([][]byte, 0)
+         .          .     93:		for i := 0; i < 50000; i++ {
+         .          .     94:			tempSliceAppend = append(tempSliceAppend, make([]byte, 128))
+         .          .     95:		}
+         .          .     96:		globalAllocs = append(globalAllocs, tempSliceAppend)
+         .          .     97:
+         .          .     98:		// Large byte slices
+         .          .     99:		for i := 0; i < 10000; i++ {
+         .          .    100:			largeBytes := make([]byte, 1024)
+         .          .    101:			globalAllocs = append(globalAllocs, largeBytes)
+         .          .    102:		}
+         .          .    103:
+         .          .    104:		// String allocations from byte slices
+         .          .    105:		stringData := make([]string, 0, 50000)
+         .          .    106:		for i := 0; i < 50000; i++ {
+         .          .    107:			b := make([]byte, 256)
+         .          .    108:			for j := 0; j < len(b); j++ {
+         .          .    109:				b[j] = byte((i + j) % 256)
+         .          .    110:			}
+         .       10ms    111:			stringData = append(stringData, string(b))
+         .          .    112:		}
+         .          .    113:		globalAllocs = append(globalAllocs, stringData)
+         .          .    114:	}
+         .          .    115:}
+ROUTINE ======================== main.runComputeWorkloads in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/compute.go
+         0      2.52s (flat, cum) 39.25% of Total
+         .          .     83:func runComputeWorkloads() {
+         .          .     84:	for pass := 0; pass < 20; pass++ {
+         .          .     85:		// Matrix multiplication with large matrices
+         .          .     86:		a := newMatrix(512, 1.0)
+         .          .     87:		b := newMatrix(512, 2.0)
+         .      860ms     88:		_ = matrixMultiply(a, b, 512)
+         .          .     89:
+         .          .     90:		// Sieve of Eratosthenes
+         .          .     91:		_ = sieveOfEratosthenes(500000)
+         .          .     92:
+         .          .     93:		// Sort workload
+         .      600ms     94:		sortWorkload(100000, 500)
+         .          .     95:
+         .          .     96:		// Fibonacci
+         .       10ms     97:		_ = fibonacciIterative(2000000)
+         .          .     98:
+         .          .     99:		// Trigonometric workload
+         .      1.05s    100:		trigWorkload(5000000)
+         .          .    101:	}
+         .          .    102:}
+ROUTINE ======================== main.sortWorkload in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/compute.go
+      40ms      600ms (flat, cum)  9.35% of Total
+         .          .     52:func sortWorkload(n, repetitions int) {
+         .          .     53:	for r := 0; r < repetitions; r++ {
+         .       10ms     54:		data := make([]float64, n)
+         .          .     55:		for i := 0; i < n; i++ {
+      40ms       50ms     56:			data[i] = float64(n - i)
+         .          .     57:		}
+         .      540ms     58:		sort.Float64s(data)
+         .          .     59:	}
+         .          .     60:}
+         .          .     61:
+         .          .     62:// fibonacciIterative computes fibonacci with a single hot line for accumulation.
+         .          .     63:func fibonacciIterative(n int) uint64 {
+ROUTINE ======================== main.trigWorkload in /Users/iamralch/Projects/github.com/nvim-contrib/nvim-pprof/demo/compute.go
+      40ms      1.05s (flat, cum) 16.36% of Total
+         .          .     72:func trigWorkload(iterations int) {
+         .          .     73:	for i := 0; i < iterations; i++ {
+      40ms       40ms     74:		x := float64(i) / 100.0
+         .      250ms     75:		_ = math.Sin(x)
+         .      230ms     76:		_ = math.Cos(x)
+         .      530ms     77:		_ = math.Tan(x)
+         .          .     78:	}
+         .          .     79:}
+         .          .     80:
+         .          .     81:// runComputeWorkloads is the entry point for CPU-intensive workloads, called from main.
+         .          .     82:// It runs multiple passes with larger workloads to accumulate enough profile data for visualization.

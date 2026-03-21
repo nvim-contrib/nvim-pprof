@@ -9,6 +9,7 @@ local hints     = require("pprof.hints")
 local top_win   = require("pprof.top")
 local peek_win  = require("pprof.peek")
 local loclist   = require("pprof.loclist")
+local quickfix  = require("pprof.quickfix")
 local highlight = require("pprof.highlight")
 local watch     = require("pprof.watch")
 local ts        = require("pprof.ts")
@@ -148,11 +149,17 @@ local function register_commands()
   end, { nargs = "?", bang = true, complete = "file" })
 
   def("PProfSigns", function(a)
-    M.signs(a.args ~= "" and a.args or "toggle")
+    local action = a.args ~= "" and a.args or "toggle"
+    if action == "show" then M.show_signs()
+    elseif action == "hide" then M.hide_signs()
+    else M.toggle_signs() end
   end, { nargs = "?" })
 
   def("PProfHints", function(a)
-    M.hints(a.args ~= "" and a.args or "toggle")
+    local action = a.args ~= "" and a.args or "toggle"
+    if action == "show" then M.show_hints()
+    elseif action == "hide" then M.hide_hints()
+    else M.toggle_hints() end
   end, { nargs = "?" })
 
   def("PProfTop", function(a)
@@ -164,8 +171,7 @@ local function register_commands()
     M.peek(a.args ~= "" and a.args or nil)
   end, { nargs = "?" })
 
-  def("PProfNext", function() M.next() end, {})
-  def("PProfPrev", function() M.prev() end, {})
+  def("PProfQuickfix", function() M.quickfix() end, {})
   def("PProfLoclist", function() M.loclist() end, {})
   def("PProfClear", function() M.clear() end, {})
 end
@@ -209,28 +215,97 @@ function M.load(path, use_picker)
   end)
 end
 
---- Show, hide, or toggle signs for the current buffer.
---- @param action string  "show"|"hide"|"toggle"
-function M.signs(action)
-  if action == "show" then
-    signs.show()
-  elseif action == "hide" then
-    signs.hide()
-  else
-    signs.toggle()
+--- Re-render signs on all buffers that currently have signs visible.
+local function reapply_signs()
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) and signs.is_visible(bufnr) then
+      signs.show(bufnr)
+    end
   end
 end
 
---- Show, hide, or toggle inline hints for the current buffer.
---- @param action string  "show"|"hide"|"toggle"
-function M.hints(action)
-  if action == "show" then
-    hints.show()
-  elseif action == "hide" then
-    hints.hide()
-  else
-    hints.toggle()
-  end
+--- Show heat-gradient signs for the current buffer.
+function M.show_signs()
+  signs.show()
+end
+
+--- Hide heat-gradient signs for the current buffer.
+function M.hide_signs()
+  signs.hide()
+end
+
+--- Toggle heat-gradient signs for the current buffer.
+function M.toggle_signs()
+  signs.toggle()
+end
+
+--- Enable the sign column glyph and re-render.
+function M.show_signhl()
+  config.opts.signs.signhl = true
+  reapply_signs()
+end
+
+--- Disable the sign column glyph and re-render.
+function M.hide_signhl()
+  config.opts.signs.signhl = false
+  reapply_signs()
+end
+
+--- Toggle the sign column glyph and re-render.
+function M.toggle_signhl()
+  config.opts.signs.signhl = not config.opts.signs.signhl
+  reapply_signs()
+end
+
+--- Enable line number coloring and re-render.
+function M.show_numhl()
+  config.opts.signs.numhl = true
+  reapply_signs()
+end
+
+--- Disable line number coloring and re-render.
+function M.hide_numhl()
+  config.opts.signs.numhl = false
+  reapply_signs()
+end
+
+--- Toggle line number coloring and re-render.
+function M.toggle_numhl()
+  config.opts.signs.numhl = not config.opts.signs.numhl
+  reapply_signs()
+end
+
+--- Enable full-line background coloring and re-render.
+function M.show_linehl()
+  config.opts.signs.linehl = true
+  reapply_signs()
+end
+
+--- Disable full-line background coloring and re-render.
+function M.hide_linehl()
+  config.opts.signs.linehl = false
+  reapply_signs()
+end
+
+--- Toggle full-line background coloring and re-render.
+function M.toggle_linehl()
+  config.opts.signs.linehl = not config.opts.signs.linehl
+  reapply_signs()
+end
+
+--- Show inline hints for the current buffer.
+function M.show_hints()
+  hints.show()
+end
+
+--- Hide inline hints for the current buffer.
+function M.hide_hints()
+  hints.hide()
+end
+
+--- Toggle inline hints for the current buffer.
+function M.toggle_hints()
+  hints.toggle()
 end
 
 --- Show top entries from the loaded profile in a floating window.
@@ -280,14 +355,9 @@ function M.peek(func_name)
 end
 
 
---- Jump to the next annotated line in the current buffer.
-function M.next()
-  signs.jump_next()
-end
-
---- Jump to the previous annotated line in the current buffer.
-function M.prev()
-  signs.jump_prev()
+--- Populate the quickfix list with one entry per profiled file.
+function M.quickfix()
+  quickfix.populate()
 end
 
 --- Populate the location list with profile hotspot lines.

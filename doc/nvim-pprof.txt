@@ -1,0 +1,229 @@
+================================================================================
+INTRODUCTION                                                      *nvim-pprof*
+
+nvim-pprof provides Go pprof profiler integration directly inside Neovim.
+
+  1. Setup...................................................|nvim-pprof-setup|
+  2. Commands.............................................|nvim-pprof-commands|
+  3. Lua API..............................................|nvim-pprof-lua-api|
+
+================================================================================
+SETUP                                                       *nvim-pprof-setup*
+
+                                                               *pprof.setup()*
+pprof.setup({opts})
+    Initial setup function. Must be called before using the plugin.
+
+    Usage: >
+
+    require('pprof').setup({
+      hints = { enabled = true },
+    })
+<
+
+Valid keys for {opts}:
+
+    pprof_bin: ~
+        String. Binary to invoke. When set to `"go"`, the plugin runs
+        `go tool pprof`; any other value is invoked directly.
+        Defaults to: `"go"`
+
+    signs.heat_levels: ~
+        Integer >= 1. Number of discrete heat gradient levels used for
+        sign highlighting.
+        Defaults to: `5`
+
+    signs.priority: ~
+        Integer. Sign priority. See |sign-priority|.
+        Defaults to: `10`
+
+    signs.signhl: ~
+        Boolean. When true, show the glyph in the sign column.
+        Defaults to: `false`
+
+    signs.numhl: ~
+        Boolean. When true, color the line number with the heat gradient.
+        Defaults to: `true`
+
+    signs.linehl: ~
+        Boolean. When true, color the entire line background with the heat
+        gradient.
+        Defaults to: `false`
+
+    hints.enabled: ~
+        Boolean. When true, inline hints are shown automatically after a
+        profile is loaded.
+        Defaults to: `false`
+
+    hints.format: ~
+        String. Template for inline hint text. Use `{flat}` and `{cum}`
+        as placeholders for flat and cumulative values.
+        Defaults to: `"{flat} flat | {cum} cum"`
+
+    top.default_count: ~
+        Integer. Default number of top functions shown by |:PProfTop|.
+        Defaults to: `20`
+
+    watch.enabled: ~
+        Boolean. When true, the profile file is watched for changes and
+        reloaded automatically.
+        Defaults to: `false`
+
+    watch.debounce_ms: ~
+        Integer. Debounce delay in milliseconds before reloading after a
+        file change.
+        Defaults to: `500`
+
+    on_load: ~
+        Function or nil. Called after a profile is loaded.
+        Example: >
+
+        require('pprof').setup({
+            on_load = function()
+                vim.notify("Profile loaded")
+            end,
+        })
+<
+
+================================================================================
+COMMANDS                                                 *nvim-pprof-commands*
+
+:PProfLoad[!] [{file}]                                          *:PProfLoad*
+    Load a pprof profile. If {file} is not given, searches the current
+    working directory for `.prof` files. If exactly one is found it is loaded
+    directly; if multiple are found a picker (`vim.ui.select`) is shown.
+
+    With [!]: always show the picker, even when a single file is found.
+
+:PProfSigns [{action}]                                         *:PProfSigns*
+    Show, hide, or toggle heat-gradient signs. {action} is `show`, `hide`,
+    or `toggle` (default: `toggle`). Requires a prior |:PProfLoad|.
+
+:PProfHints [{action}]                                         *:PProfHints*
+    Show, hide, or toggle inline hints (virtual text with flat/cumulative
+    values). {action} is `show`, `hide`, or `toggle` (default: `toggle`).
+    Requires a prior |:PProfLoad|.
+
+:PProfTop [{count}]                                              *:PProfTop*
+    Open a floating window with the top hottest functions. {count} overrides
+    the `top.default_count` config option. Requires a prior |:PProfLoad|.
+
+:PProfPeek [{func}]                                             *:PProfPeek*
+    Open a floating window showing callers and callees of {func}. If {func}
+    is not given, the function under the cursor is used. Requires a prior
+    |:PProfLoad|.
+
+:PProfQuickfix                                              *:PProfQuickfix*
+    Populate the quickfix list with one entry per profiled file, sorted by
+    flat value (hottest files first). Opens the quickfix window.
+    Requires a prior |:PProfLoad|.
+
+:PProfLoclist                                                *:PProfLoclist*
+    Populate the location list for the current window with all hotspot lines
+    from the loaded profile, sorted by flat value (hottest first). Opens the
+    location list. Requires a prior |:PProfLoad|.
+
+:PProfClear                                                    *:PProfClear*
+    Remove signs, clear the cached profile, stop the file watcher, and
+    disable hints.
+
+
+================================================================================
+LUA API                                                   *nvim-pprof-lua-api*
+
+                                                               *pprof.load()*
+pprof.load({file}, {use_picker})
+    Load a pprof profile. If {file} is nil, searches the current working
+    directory for `.prof` files. When {use_picker} is true, always show the
+    interactive file picker. Also starts the file watcher when
+    `watch.enabled` is true.
+
+                                                         *pprof.show_signs()*
+pprof.show_signs()
+    Show heat-gradient signs for the current buffer.
+
+                                                         *pprof.hide_signs()*
+pprof.hide_signs()
+    Hide heat-gradient signs for the current buffer.
+
+                                                       *pprof.toggle_signs()*
+pprof.toggle_signs()
+    Toggle heat-gradient signs for the current buffer.
+
+                                                        *pprof.show_signhl()*
+pprof.show_signhl()
+    Enable the sign column glyph and re-render all visible buffers.
+
+                                                        *pprof.hide_signhl()*
+pprof.hide_signhl()
+    Disable the sign column glyph and re-render all visible buffers.
+
+                                                      *pprof.toggle_signhl()*
+pprof.toggle_signhl()
+    Toggle the sign column glyph and re-render all visible buffers.
+
+                                                         *pprof.show_numhl()*
+pprof.show_numhl()
+    Enable line number coloring and re-render all visible buffers.
+
+                                                         *pprof.hide_numhl()*
+pprof.hide_numhl()
+    Disable line number coloring and re-render all visible buffers.
+
+                                                       *pprof.toggle_numhl()*
+pprof.toggle_numhl()
+    Toggle line number coloring and re-render all visible buffers.
+
+                                                        *pprof.show_linehl()*
+pprof.show_linehl()
+    Enable full-line background coloring and re-render all visible buffers.
+
+                                                        *pprof.hide_linehl()*
+pprof.hide_linehl()
+    Disable full-line background coloring and re-render all visible buffers.
+
+                                                      *pprof.toggle_linehl()*
+pprof.toggle_linehl()
+    Toggle full-line background coloring and re-render all visible buffers.
+
+                                                         *pprof.show_hints()*
+pprof.show_hints()
+    Show inline hints (virtual text with flat/cumulative values) for the
+    current buffer.
+
+                                                         *pprof.hide_hints()*
+pprof.hide_hints()
+    Hide inline hints for the current buffer.
+
+                                                       *pprof.toggle_hints()*
+pprof.toggle_hints()
+    Toggle inline hints for the current buffer.
+
+                                                                *pprof.top()*
+pprof.top({count})
+    Open a floating window with the top hottest functions. {count} overrides
+    the `top.default_count` config option.
+
+                                                               *pprof.peek()*
+pprof.peek({func_name})
+    Open a floating window showing callers and callees of {func_name}. If
+    {func_name} is nil, the function under the cursor is used.
+
+                                                           *pprof.quickfix()*
+pprof.quickfix()
+    Populate the quickfix list with one entry per profiled file, sorted by
+    flat value (hottest files first). Opens the quickfix window.
+
+                                                            *pprof.loclist()*
+pprof.loclist()
+    Populate the location list for the current window with all hotspot lines
+    from the loaded profile, sorted by flat value (hottest first). Opens the
+    location list.
+
+                                                              *pprof.clear()*
+pprof.clear()
+    Remove signs, clear the cached profile, stop the file watcher, and
+    disable hints.
+
+
+ vim:tw=78:ts=8:ft=help:norl:

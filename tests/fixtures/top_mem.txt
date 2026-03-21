@@ -1,0 +1,9 @@
+File: demo-pprof
+Type: inuse_space
+Time: 2026-03-21 13:02:51 +04
+Showing nodes accounting for 1.27GB, 99.68% of 1.27GB total
+Dropped 16 nodes (cum <= 0.01GB)
+      flat  flat%   sum%        cum   cum%
+    1.27GB 99.68% 99.68%     1.27GB 99.68%  main.runAllocateWorkloads
+         0     0% 99.68%     1.27GB 99.81%  main.main
+         0     0% 99.68%     1.27GB 99.81%  runtime.main

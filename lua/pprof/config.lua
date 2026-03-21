@@ -28,6 +28,16 @@ M.opts = vim.deepcopy(defaults)
 
 function M.setup(user_opts)
 	M.opts = vim.tbl_deep_extend("force", defaults, user_opts or {})
+
+	if type(M.opts.pprof_bin) ~= "string" then
+		vim.notify("pprof: pprof_bin must be a string, using default", vim.log.levels.WARN)
+		M.opts.pprof_bin = defaults.pprof_bin
+	end
+
+	if M.opts.signs and M.opts.signs.heat_levels and M.opts.signs.heat_levels < 1 then
+		vim.notify("pprof: heat_levels must be >= 1, clamping to 1", vim.log.levels.WARN)
+		M.opts.signs.heat_levels = 1
+	end
 end
 
 return M

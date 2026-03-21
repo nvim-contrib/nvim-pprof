@@ -2,6 +2,17 @@ local config = require("pprof.config")
 
 local M = {}
 
+--- Check if the configured pprof binary is available.
+--- @return boolean
+local function check_executable()
+  local bin = config.opts.pprof_bin or "go"
+  if vim.fn.executable(bin) == 0 then
+    vim.notify(string.format("pprof: '%s' not found in PATH", bin), vim.log.levels.ERROR)
+    return false
+  end
+  return true
+end
+
 --- Build the base command for invoking pprof.
 --- @param args string[]  additional arguments before profile_path
 --- @param profile_path string
@@ -44,6 +55,10 @@ end
 --- @param profile_path string
 --- @param callback fun(err: string|nil, stdout: string)
 function M.run_list(profile_path, callback)
+  if not check_executable() then
+    callback("pprof binary not found", "")
+    return
+  end
   local cmd = build_cmd({ "-list", "." }, profile_path)
   run_async(cmd, callback)
 end
@@ -53,6 +68,10 @@ end
 --- @param count integer
 --- @param callback fun(err: string|nil, stdout: string)
 function M.run_top(profile_path, count, callback)
+  if not check_executable() then
+    callback("pprof binary not found", "")
+    return
+  end
   local nodecount = string.format("-nodecount=%d", count or config.opts.top.default_count)
   local cmd = build_cmd({ "-top", nodecount }, profile_path)
   run_async(cmd, callback)
@@ -63,6 +82,10 @@ end
 --- @param func_name string
 --- @param callback fun(err: string|nil, stdout: string)
 function M.run_peek(profile_path, func_name, callback)
+  if not check_executable() then
+    callback("pprof binary not found", "")
+    return
+  end
   local cmd = build_cmd({ "-peek", func_name }, profile_path)
   run_async(cmd, callback)
 end
