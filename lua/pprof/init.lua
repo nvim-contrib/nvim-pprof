@@ -11,6 +11,7 @@ local peek_win  = require("pprof.peek")
 local loclist   = require("pprof.loclist")
 local highlight = require("pprof.highlight")
 local watch     = require("pprof.watch")
+local ts        = require("pprof.ts")
 
 local _autocmd_registered = false
 
@@ -176,6 +177,7 @@ function M.setup(opts)
   highlight.setup(config.opts.signs and config.opts.signs.heat_levels or 5)
   register_commands()
   register_autocmds()
+  require("pprof.lsp").setup()
 end
 
 --- Load a pprof profile file.
@@ -249,7 +251,7 @@ function M.top(count)
 end
 
 --- Show peek (callers/callees) for a function in a floating window.
---- @param func_name string|nil  function name; if nil, uses word under cursor
+--- @param func_name string|nil  function name; if nil, uses treesitter to detect function under cursor
 function M.peek(func_name)
   local data = cache.get()
   if not data then
@@ -258,12 +260,14 @@ function M.peek(func_name)
   end
 
   if not func_name or func_name == "" then
-    func_name = vim.fn.expand("<cword>")
-  end
-
-  if not func_name or func_name == "" then
-    vim.notify("pprof: no function name", vim.log.levels.WARN)
-    return
+    local ts_name, ts_confirmed = ts.func_at_cursor()
+    if ts_name then
+      func_name = ts_name          -- confirmed function OR cword fallback
+    else
+      -- treesitter confirmed: cursor is not on a function
+      vim.notify("pprof: cursor is not on a function name or call", vim.log.levels.WARN)
+      return
+    end
   end
 
   pprof.run_peek(data.profile_path, func_name, function(err, stdout)
@@ -271,10 +275,10 @@ function M.peek(func_name)
       vim.notify("pprof: peek error: " .. err, vim.log.levels.ERROR)
       return
     end
-    local peek_data = parse.peek.parse(stdout)
-    peek_win.show(peek_data)
+    peek_win.show(parse.peek.parse(stdout))
   end)
 end
+
 
 --- Jump to the next annotated line in the current buffer.
 function M.next()
