@@ -9,10 +9,10 @@ import (
 // The inner accumulation line is the hottest.
 func matrixMultiply(a, b [][]float64, n int) [][]float64 {
 	c := make([][]float64, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		c[i] = make([]float64, n)
-		for k := 0; k < n; k++ {
-			for j := 0; j < n; j++ {
+		for k := range n {
+			for j := range n {
 				c[i][j] += a[i][k] * b[k][j]
 			}
 		}
@@ -23,9 +23,9 @@ func matrixMultiply(a, b [][]float64, n int) [][]float64 {
 // newMatrix fills a matrix with sin/cos values.
 func newMatrix(n int, seed float64) [][]float64 {
 	m := make([][]float64, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		m[i] = make([]float64, n)
-		for j := 0; j < n; j++ {
+		for j := range n {
 			m[i][j] = math.Sin(seed + float64(i)*0.1 + float64(j)*0.05)
 		}
 	}
@@ -50,9 +50,9 @@ func sieveOfEratosthenes(limit int) []bool {
 
 // sortWorkload performs tight refill and sort operations.
 func sortWorkload(n, repetitions int) {
-	for r := 0; r < repetitions; r++ {
+	for range repetitions {
 		data := make([]float64, n)
-		for i := 0; i < n; i++ {
+		for i := range n {
 			data[i] = float64(n - i)
 		}
 		sort.Float64s(data)
@@ -62,7 +62,7 @@ func sortWorkload(n, repetitions int) {
 // fibonacciIterative computes fibonacci with a single hot line for accumulation.
 func fibonacciIterative(n int) uint64 {
 	a, b := uint64(0), uint64(1)
-	for i := 0; i < n; i++ {
+	for range n {
 		a, b = b, a+b
 	}
 	return a
@@ -70,7 +70,7 @@ func fibonacciIterative(n int) uint64 {
 
 // trigWorkload calls three transcendental functions on separate lines for graduated heat.
 func trigWorkload(iterations int) {
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		x := float64(i) / 100.0
 		_ = math.Sin(x)
 		_ = math.Cos(x)
@@ -81,7 +81,7 @@ func trigWorkload(iterations int) {
 // runComputeWorkloads is the entry point for CPU-intensive workloads, called from main.
 // It runs multiple passes with larger workloads to accumulate enough profile data for visualization.
 func runComputeWorkloads() {
-	for pass := 0; pass < 20; pass++ {
+	for range 20 {
 		// Matrix multiplication with large matrices
 		a := newMatrix(512, 1.0)
 		b := newMatrix(512, 2.0)

@@ -2,7 +2,7 @@ package main
 
 // directSliceAllocation allocates slices directly (tracked in memory profile).
 func directSliceAllocation(n int) {
-	for i := 0; i < n; i++ {
+	for range n {
 		// Direct make() calls are tracked in memory profile
 		_ = make([]byte, 4096)
 	}
@@ -22,7 +22,7 @@ func recursiveAllocation(depth int, size int) {
 // mapAllocationWorkload allocates map nodes directly.
 func mapAllocationWorkload(n int) {
 	m := make(map[int][]byte)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		// Each assignment allocates a new key in the map and a byte slice
 		m[i] = make([]byte, 256)
 	}
@@ -32,7 +32,7 @@ func mapAllocationWorkload(n int) {
 // append() allocates new backing arrays.
 func sliceAppendWorkload(n int) {
 	s := make([][]byte, 0)
-	for i := 0; i < n; i++ {
+	for range n {
 		// append allocates new backing array as slice grows
 		s = append(s, make([]byte, 128))
 	}
@@ -45,7 +45,7 @@ func nestedAllocation(n int) {
 		Child *Node
 	}
 	var head *Node
-	for i := 0; i < n; i++ {
+	for range n {
 		// Each iteration allocates a new Node with embedded slice
 		head = &Node{
 			Data:  make([]byte, 512),
@@ -56,10 +56,10 @@ func nestedAllocation(n int) {
 
 // allocateStrings allocates string data through explicit byte slices.
 func allocateStrings(n int, strLen int) {
-	for i := 0; i < n; i++ {
+	for i := range n {
 		// Make a byte slice and convert to string (allocates string)
 		b := make([]byte, strLen)
-		for j := 0; j < len(b); j++ {
+		for j := range b {
 			b[j] = byte((i + j) % 256)
 		}
 		_ = string(b)
@@ -73,39 +73,39 @@ var globalAllocs []interface{} // Keeps allocations alive for heap profile
 func runAllocateWorkloads() {
 	globalAllocs = make([]interface{}, 0)
 
-	for pass := 0; pass < 5; pass++ {
+	for range 5 {
 		// Direct slice allocations with retention
 		tempSlices := make([][]byte, 50000)
-		for i := 0; i < 50000; i++ {
+		for i := range 50000 {
 			tempSlices[i] = make([]byte, 4096)
 		}
 		globalAllocs = append(globalAllocs, tempSlices)
 
 		// Map allocations with retention
 		tempMap := make(map[int][]byte)
-		for i := 0; i < 100000; i++ {
+		for i := range 100000 {
 			tempMap[i] = make([]byte, 256)
 		}
 		globalAllocs = append(globalAllocs, tempMap)
 
 		// Slice append allocations with retention
 		tempSliceAppend := make([][]byte, 0)
-		for i := 0; i < 50000; i++ {
+		for range 50000 {
 			tempSliceAppend = append(tempSliceAppend, make([]byte, 128))
 		}
 		globalAllocs = append(globalAllocs, tempSliceAppend)
 
 		// Large byte slices
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			largeBytes := make([]byte, 1024)
 			globalAllocs = append(globalAllocs, largeBytes)
 		}
 
 		// String allocations from byte slices
 		stringData := make([]string, 0, 50000)
-		for i := 0; i < 50000; i++ {
+		for i := range 50000 {
 			b := make([]byte, 256)
-			for j := 0; j < len(b); j++ {
+			for j := range b {
 				b[j] = byte((i + j) % 256)
 			}
 			stringData = append(stringData, string(b))
