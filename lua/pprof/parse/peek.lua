@@ -11,22 +11,20 @@ local M = {}
 --- @field callees PeekEntry[]  functions this function calls
 --- @field callers PeekEntry[]  functions that call this function
 
---- Parse a value/pct line like "  120ms (10.00%)  |  main.compute"
---- @param line string
---- @return PeekEntry|nil
-local function parse_peek_entry(line)
-  local val_str, pct_s, name = line:match("^%s*(%S+)%s+%(([%d%.]+)%%)%s+|%s+(.-)%s*$")
-  if val_str and pct_s and name then
-    return {
-      value_str = val_str,
-      pct       = tonumber(pct_s) or 0,
-      name      = name,
-    }
-  end
-  return nil
-end
-
 --- Parse the output of `pprof -peek func_name`.
+---
+--- Actual stdout format:
+---   File: ... / Type: ... / Time: ... / Duration: ... / Showing ...
+---   ------+------   (separator)
+---         flat  flat%  sum%  cum  cum%  calls calls% + context
+---   ------+------   (separator)
+---   [~45 spaces] calls  pct% |  caller_func
+---   [~5 spaces]  flat flat% sum% cum cum%  [spaces] | self_func
+---   [~45 spaces] calls  pct% |  callee_func
+---   ------+------   (separator)
+---
+--- The self entry is identified by having the flat value at a small indent (<20),
+--- while callers/callees have large indent (~45 spaces) before their value.
 --- @param text string
 --- @return PeekData
 function M.parse(text)
@@ -38,55 +36,58 @@ function M.parse(text)
   local self_entry = nil
   local callees = {}
   local callers = {}
+  local self_found = false
 
-  -- State: "header" -> "before_sep" -> "after_sep"
-  local state = "header"
-
-  local lines = {}
   for line in text:gmatch("[^\n]+") do
-    lines[#lines + 1] = line
-  end
+    -- Separator lines: ------+------
+    if line:match("^%-+%+%-+$") then goto continue end
+    -- Blank lines
+    if line:match("^%s*$") then goto continue end
+    -- Header/meta lines
+    if line:match("^File:") or line:match("^Type:") or line:match("^Time:")
+        or line:match("^Duration:") or line:match("^Showing") then goto continue end
+    -- Column header row (contains "flat%")
+    if line:match("flat%%") then goto continue end
 
-  local i = 1
+    -- All data lines contain "|"
+    local pipe_pos = line:find("|", 1, true)
+    if not pipe_pos then goto continue end
 
-  -- First non-blank line is the function name
-  while i <= #lines do
-    local line = lines[i]
-    i = i + 1
-    if not line:match("^%s*$") then
-      func_name = line:match("^%s*(.-)%s*$")
-      state = "before_sep"
-      break
-    end
-  end
+    local left  = line:sub(1, pipe_pos - 1)
+    local right = line:sub(pipe_pos + 1):match("^%s*(.-)%s*$")
+    if not right or right == "" then goto continue end
 
-  -- Remaining lines: entries before "----" separator are callees (or self),
-  -- entries after separator are callers.
-  while i <= #lines do
-    local line = lines[i]
-    i = i + 1
+    -- First token = unqualified function name (used for navigation)
+    local name = right:match("^(%S+)")
+    if not name then goto continue end
 
-    -- Separator line
-    if line:match("^%s*%-%-%-%-+%s*$") then
-      state = "after_sep"
-      goto continue
-    end
+    -- Self entry has flat data starting at small indent (~5 spaces).
+    -- Caller/callee entries have large indent (~45 spaces) before calls/calls%.
+    local indent = #(left:match("^(%s*)") or "")
 
-    -- Skip blank lines
-    if line:match("^%s*$") then
-      goto continue
-    end
-
-    local entry = parse_peek_entry(line)
-    if entry then
-      if state == "before_sep" then
-        -- The "self" entry is identified by name == "self"
-        if entry.name == "self" then
-          self_entry = entry
-        else
-          table.insert(callees, entry)
-        end
-      elseif state == "after_sep" then
+    if indent < 20 then
+      -- Self line: extract flat value and flat% (pct may be integer like "100%")
+      local flat_str = left:match("^%s*(%S+)")
+      local flat_pct = left:match("^%s*%S+%s+(%d+%.?%d*)%%")
+      self_entry = {
+        value_str = flat_str or "?",
+        pct       = tonumber(flat_pct) or 0,
+        name      = right,
+      }
+      func_name  = name
+      self_found = true
+    else
+      -- Caller or callee: calls and calls% appear right before the pipe.
+      -- PCT may be an integer ("100%") or decimal ("41.67%").
+      local val_str, pct_s = left:match("(%S+)%s+(%d+%.?%d*)%%%s*$")
+      local entry = {
+        value_str = val_str or "?",
+        pct       = tonumber(pct_s) or 0,
+        name      = right,
+      }
+      if self_found then
+        table.insert(callees, entry)
+      else
         table.insert(callers, entry)
       end
     end
