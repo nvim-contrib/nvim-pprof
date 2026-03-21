@@ -65,41 +65,76 @@ The resulting `.prof` files can be loaded directly by nvim-pprof.
 
 ## Configuration
 
-The `setup` function accepts an optional table to override any defaults:
-
 ```lua
 require("pprof").setup({
-  -- Path to the Go binary used to invoke `go tool pprof`
+  -- path to the Go binary used to invoke `go tool pprof`
   pprof_bin = "go",
 
-  -- Register :PProf* commands (default: true)
+  -- register :PProf* commands (default: true)
   commands = true,
 
   auto_reload = {
-    enabled = false,    -- auto-reload profile when .prof file changes on disk
+    enabled    = false, -- auto-reload profile when .prof file changes on disk
     timeout_ms = 500,   -- debounce delay before reloading
   },
 
-  -- Called after a profile is loaded
+  -- called after a profile is loaded
   on_load = nil,
 
   signs = {
-    heat_levels = 5,     -- number of heat gradient levels (1-5)
-    text        = "▎",   -- sign column glyph; use "▌" for thicker rendering
-    signhl      = false, -- show glyph in sign column (toggleable at runtime)
-    numhl       = true,  -- color the line number (toggleable at runtime)
-    linehl      = false, -- color the entire line background (toggleable at runtime)
+    cold        = { hl = "PprofHeatCold", text = "▎" }, -- coldest lines
+    warm        = { hl = "PprofHeatWarm", text = "▎" }, -- mid-range lines
+    hot         = { hl = "PprofHeatHot",  text = "▎" }, -- hottest lines
+    group       = "pprof",  -- sign group name (:h sign-group)
+    signhl      = false,    -- show glyph in sign column (toggleable at runtime)
+    numhl       = true,     -- color the line number (toggleable at runtime)
+    linehl      = false,    -- color the entire line background (toggleable at runtime)
+    heat_levels = 5,        -- number of gradient steps between cold and hot
   },
 
-  -- Inline virtual text hints
-  hints = {
-    enabled = false,                    -- show hints automatically after load
-    format  = "{flat} flat | {cum} cum", -- template ({flat} and {cum} are replaced)
+  -- heat gradient anchor colors (cold → warm → hot)
+  highlights = {
+    cold = { fg = "#3b82f6", bg = "#1e3a5f" },
+    warm = { fg = "#f59e0b", bg = "#7a4f05" },
+    hot  = { fg = "#ef4444", bg = "#7f1d1d" },
   },
 
-  -- Top-N function summary window
+  -- inline virtual text showing flat/cum values per line
+  line_hints = {
+    enabled   = false,                     -- show hints automatically after load
+    format    = "{flat} flat | {cum} cum", -- {flat} and {cum} are substituted
+    position  = "eol",                     -- "eol" | "right_align" | "inline"
+    highlight = { link = "Comment" },
+  },
+
+  -- top-N function summary floating window
   top = {
     default_count = 20,
+    border        = "rounded",
+    width         = 0.70,  -- fraction of editor columns
+    height        = 0.50,  -- fraction of editor lines
+    window        = {},    -- extra options passed to nvim_open_win
+    highlights = {
+      header        = { link = "Title" },
+      column_header = { link = "Comment" },
+      border        = { link = "FloatBorder" },
+      normal        = { link = "NormalFloat" },
+      cursor_line   = { link = "CursorLine" },
+    },
+  },
+
+  -- callers/callees peek floating window
+  peek = {
+    border  = "rounded",
+    width   = 0,  -- 0 = auto-size to content; fraction > 0 = fixed ratio
+    height  = 0,
+    window  = {},
+    highlights = {
+      header      = { link = "Title" },
+      border      = { link = "FloatBorder" },
+      normal      = { link = "NormalFloat" },
+      cursor_line = { link = "CursorLine" },
+    },
   },
 })
 ```
