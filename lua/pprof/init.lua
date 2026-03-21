@@ -19,12 +19,16 @@ local function apply_to_open_buffers()
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr)
-      if filepath ~= "" and cache.get_file(filepath) then
-        if config.opts.signs and config.opts.signs.enabled then
-          signs.show(bufnr)
-        end
-        if config.opts.hints and config.opts.hints.enabled then
-          hints.show(bufnr)
+      if filepath ~= "" then
+        -- Normalize to absolute path and resolve symlinks to match cache keys
+        filepath = vim.fn.resolve(vim.fn.fnamemodify(filepath, ":p"))
+        if cache.get_file(filepath) then
+          if config.opts.signs and config.opts.signs.enabled then
+            signs.show(bufnr)
+          end
+          if config.opts.hints and config.opts.hints.enabled then
+            hints.show(bufnr)
+          end
         end
       end
     end
@@ -56,10 +60,18 @@ local function do_load(path)
     local parsed_list = parse.list.parse(list_stdout or "")
     local parsed_top  = parse.top.parse(top_stdout or "")
 
+    -- Normalize file paths in the cache list by resolving symlinks
+    -- This ensures consistency when matching buffer paths
+    local normalized_list = {}
+    for filepath, annotations in pairs(parsed_list.list or {}) do
+      local resolved = vim.fn.resolve(filepath)
+      normalized_list[resolved] = annotations
+    end
+
     -- cache.set MUST happen before on_load callback
     cache.set({
       profile_path = path,
-      list         = parsed_list.list,
+      list         = normalized_list,
       top          = parsed_top,
       total_str    = parsed_list.total_str,
     })
@@ -103,6 +115,8 @@ local function register_autocmds()
       if not cache.is_loaded() then return end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
       if filepath == "" then return end
+      -- Normalize to absolute path and resolve symlinks to match cache keys
+      filepath = vim.fn.resolve(vim.fn.fnamemodify(filepath, ":p"))
       if not cache.get_file(filepath) then return end
       if config.opts.signs and config.opts.signs.enabled then
         signs.show(ev.buf)
@@ -120,6 +134,61 @@ local function register_commands()
     pcall(vim.api.nvim_del_user_command, name)
     vim.api.nvim_create_user_command(name, fn, opts or {})
   end
+
+  def("PProfTest", function()
+    -- Test manual sign/hint display
+    local data = cache.get()
+    if not data then
+      vim.notify("pprof: no profile loaded", vim.log.levels.WARN)
+      return
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.notify("Attempting to show signs on buffer " .. bufnr, vim.log.levels.INFO)
+    signs.show(bufnr)
+    vim.notify("Attempting to show hints on buffer " .. bufnr, vim.log.levels.INFO)
+    hints.show(bufnr)
+  end, {})
+
+  def("PProfDebug", function()
+    local data = cache.get()
+    if not data then
+      vim.notify("pprof: no profile loaded", vim.log.levels.WARN)
+      return
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    local buf_name = vim.api.nvim_buf_get_name(bufnr)
+    local abs_path = vim.fn.fnamemodify(buf_name, ":p")
+    local cwd = vim.fn.getcwd()
+
+    local msg = "=== PProfDebug ===\n"
+    msg = msg .. "Working directory: " .. cwd .. "\n"
+    msg = msg .. "Buffer name: " .. buf_name .. "\n"
+    msg = msg .. "Absolute path: " .. abs_path .. "\n"
+    msg = msg .. "Profile path: " .. (data.profile_path or "?") .. "\n"
+    msg = msg .. "\nCache keys:\n"
+
+    local found = false
+    local count = 0
+    for filepath, annotations in pairs(data.list or {}) do
+      count = count + 1
+      local match = filepath == abs_path
+      msg = msg .. (match and "✓ " or "  ") .. filepath .. " (" .. #annotations .. " routines)\n"
+      if match then
+        found = true
+      end
+    end
+
+    msg = msg .. "\nTotal files in cache: " .. count
+    if not found then
+      msg = msg .. "\n\n✗ NO MATCH in cache"
+    else
+      msg = msg .. "\n\n✓ MATCH FOUND"
+    end
+
+    vim.notify(msg, vim.log.levels.INFO)
+  end, {})
 
   def("PProfLoad", function(a)
     local path = a.args ~= "" and a.args or nil

@@ -23,7 +23,9 @@ local function get_buf_filepath(bufnr)
   if name == "" then
     return nil
   end
-  return name
+  -- Normalize to absolute path and resolve symlinks to match cache keys
+  local abs = vim.fn.fnamemodify(name, ":p")
+  return vim.fn.resolve(abs)
 end
 
 local function ensure_signs_defined()
@@ -91,6 +93,11 @@ function M.show(bufnr)
   -- Build sign placement list
   local place_list = {}
   for lnum, line in pairs(deduped) do
+    -- Skip lines with no profiling data
+    if line.flat == 0 and line.cum == 0 then
+      goto continue
+    end
+
     local level = util.heat_to_level(line.heat, levels)
     place_list[#place_list + 1] = {
       buffer = bufnr,
@@ -99,6 +106,8 @@ function M.show(bufnr)
       lnum = lnum,
       priority = 10,
     }
+
+    ::continue::
   end
 
   if #place_list == 0 then

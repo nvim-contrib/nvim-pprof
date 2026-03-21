@@ -82,7 +82,7 @@ function M.parse(text)
     end
 
     -- ROUTINE line: "ROUTINE ======================== func.Name in /path/to/file.go"
-    local func_name, file_path = line:match("^ROUTINE%s+={1,}%s+(.-)%s+in%s+(.+)$")
+    local func_name, file_path = line:match("^ROUTINE%s+=+%s+(.-)%s+in%s+(.+)$")
     if func_name and file_path then
       flush_routine()
       current_routine = {

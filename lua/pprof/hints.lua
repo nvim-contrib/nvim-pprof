@@ -20,7 +20,9 @@ local function get_buf_filepath(bufnr)
   if name == "" then
     return nil
   end
-  return name
+  -- Normalize to absolute path and resolve symlinks to match cache keys
+  local abs = vim.fn.fnamemodify(name, ":p")
+  return vim.fn.resolve(abs)
 end
 
 local function format_hint(template, flat_str, cum_str)
@@ -75,6 +77,11 @@ function M.show(bufnr)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
 
   for lnum, line in pairs(deduped) do
+    -- Skip lines with no profiling data (both flat and cum are zero)
+    if line.flat == 0 and line.cum == 0 then
+      goto continue
+    end
+
     -- lnum is 1-based, extmarks use 0-based
     local row = lnum - 1
     if row >= 0 and row < line_count then
@@ -85,6 +92,8 @@ function M.show(bufnr)
         hl_mode = "combine",
       })
     end
+
+    ::continue::
   end
 
   _visible[bufnr] = true
