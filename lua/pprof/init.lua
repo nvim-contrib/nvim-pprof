@@ -351,9 +351,9 @@ function M.peek(func_name)
   end
 
   if not func_name or func_name == "" then
-    local ts_name, ts_confirmed = ts.func_at_cursor()
+    local ts_name = ts.func_at_cursor()
     if ts_name then
-      func_name = ts_name          -- confirmed function OR cword fallback
+      func_name = ts_name
     else
       -- treesitter confirmed: cursor is not on a function
       vim.notify("pprof: cursor is not on a function name or call", vim.log.levels.WARN)

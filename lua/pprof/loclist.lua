@@ -10,24 +10,19 @@ function M.populate()
     return
   end
 
-  -- Gather all file annotations from cache via the profile's file list
   local all_items = {}
 
-  local files = profile.list or {}
-  for filepath, _ in pairs(files) do
-    local annotations = cache.get_file(filepath)
-    if annotations then
-      for _, routine in ipairs(annotations) do
-        if routine.lines then
-          for _, line in ipairs(routine.lines) do
-            all_items[#all_items + 1] = {
-              filepath = filepath,
-              lnum = line.lnum,
-              flat = line.flat,
-              flat_str = line.flat_str,
-              cum_str = line.cum_str,
-            }
-          end
+  for filepath, annotations in pairs(profile.list or {}) do
+    for _, routine in ipairs(annotations) do
+      if routine.lines then
+        for _, line in ipairs(routine.lines) do
+          all_items[#all_items + 1] = {
+            filepath = filepath,
+            lnum = line.lnum,
+            flat = line.flat,
+            flat_str = line.flat_str,
+            cum_str = line.cum_str,
+          }
         end
       end
     end

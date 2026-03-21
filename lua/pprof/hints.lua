@@ -68,7 +68,7 @@ function M.show(bufnr)
   end
 
   local opts = config.opts
-  local fmt = (opts.hints and opts.hints.format) or " {flat} flat | {cum} cum"
+  local fmt = (opts.hints and opts.hints.format) or "{flat} flat | {cum} cum"
 
   -- Clear existing marks first
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)

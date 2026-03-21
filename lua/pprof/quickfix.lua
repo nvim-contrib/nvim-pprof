@@ -18,13 +18,15 @@ function M.populate()
     local total_flat = 0
     local total_cum = 0
     local hot_lnum = 1
+    local max_flat = 0
 
     for _, routine in ipairs(annotations) do
       total_flat = total_flat + routine.flat
       total_cum = total_cum + routine.cum
-      if routine.lines and #routine.lines > 0 then
+      if routine.lines then
         for _, ln in ipairs(routine.lines) do
-          if ln.flat > 0 and (hot_lnum == 1 or ln.flat > total_flat) then
+          if ln.flat > max_flat then
+            max_flat = ln.flat
             hot_lnum = ln.lnum
           end
         end
@@ -48,10 +50,11 @@ function M.populate()
 
   table.sort(rows, function(a, b) return a.flat > b.flat end)
 
+  -- Detect the unit from total_str for consistent formatting
+  local unit = (profile.total_str or ""):match("[%a]+$") or ""
+
   local items = {}
   for _, row in ipairs(rows) do
-    -- Detect the unit from total_str for consistent formatting
-    local unit = (profile.total_str or ""):match("[%a]+$") or ""
     local flat_str = util.format_value(row.flat, unit)
     local cum_str = util.format_value(row.cum, unit)
     items[#items + 1] = {
