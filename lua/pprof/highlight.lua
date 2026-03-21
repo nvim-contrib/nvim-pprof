@@ -50,8 +50,14 @@ function M.setup(heat_levels)
     -- Text highlight (for virtual text / line annotations)
     vim.api.nvim_set_hl(0, "PprofHeat" .. i, { fg = fg })
 
-    -- Sign column highlight (fg text on colored background)
+    -- Sign column glyph highlight
     vim.api.nvim_set_hl(0, "PprofHeatSign" .. i, { fg = fg, bg = bg })
+
+    -- Line number highlight (extmark number_hl_group)
+    vim.api.nvim_set_hl(0, "PprofHeatNumber" .. i, { fg = fg, bold = true })
+
+    -- Full line background highlight (extmark line_hl_group, opt-in)
+    vim.api.nvim_set_hl(0, "PprofHeatLine" .. i, { bg = bg })
   end
 
   -- Subtle gray for virtual hint text

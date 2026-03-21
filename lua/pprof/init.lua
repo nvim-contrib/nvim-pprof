@@ -14,6 +14,12 @@ local watch     = require("pprof.watch")
 
 local _autocmd_registered = false
 
+--- Returns true if any sign channel (glyph, numhl, linehl) is configured on.
+local function signs_active()
+  local s = config.opts.signs
+  return s and (s.signhl or s.numhl or s.linehl)
+end
+
 --- Apply signs and hints to all currently loaded buffers that have cached annotations.
 local function apply_to_open_buffers()
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
@@ -23,7 +29,7 @@ local function apply_to_open_buffers()
         -- Normalize to absolute path and resolve symlinks to match cache keys
         filepath = vim.fn.resolve(vim.fn.fnamemodify(filepath, ":p"))
         if cache.get_file(filepath) then
-          if config.opts.signs and config.opts.signs.enabled then
+          if signs_active() then
             signs.show(bufnr)
           end
           if config.opts.hints and config.opts.hints.enabled then
@@ -118,7 +124,7 @@ local function register_autocmds()
       -- Normalize to absolute path and resolve symlinks to match cache keys
       filepath = vim.fn.resolve(vim.fn.fnamemodify(filepath, ":p"))
       if not cache.get_file(filepath) then return end
-      if config.opts.signs and config.opts.signs.enabled then
+      if signs_active() then
         signs.show(ev.buf)
       end
       if config.opts.hints and config.opts.hints.enabled then
@@ -134,61 +140,6 @@ local function register_commands()
     pcall(vim.api.nvim_del_user_command, name)
     vim.api.nvim_create_user_command(name, fn, opts or {})
   end
-
-  def("PProfTest", function()
-    -- Test manual sign/hint display
-    local data = cache.get()
-    if not data then
-      vim.notify("pprof: no profile loaded", vim.log.levels.WARN)
-      return
-    end
-
-    local bufnr = vim.api.nvim_get_current_buf()
-    vim.notify("Attempting to show signs on buffer " .. bufnr, vim.log.levels.INFO)
-    signs.show(bufnr)
-    vim.notify("Attempting to show hints on buffer " .. bufnr, vim.log.levels.INFO)
-    hints.show(bufnr)
-  end, {})
-
-  def("PProfDebug", function()
-    local data = cache.get()
-    if not data then
-      vim.notify("pprof: no profile loaded", vim.log.levels.WARN)
-      return
-    end
-
-    local bufnr = vim.api.nvim_get_current_buf()
-    local buf_name = vim.api.nvim_buf_get_name(bufnr)
-    local abs_path = vim.fn.fnamemodify(buf_name, ":p")
-    local cwd = vim.fn.getcwd()
-
-    local msg = "=== PProfDebug ===\n"
-    msg = msg .. "Working directory: " .. cwd .. "\n"
-    msg = msg .. "Buffer name: " .. buf_name .. "\n"
-    msg = msg .. "Absolute path: " .. abs_path .. "\n"
-    msg = msg .. "Profile path: " .. (data.profile_path or "?") .. "\n"
-    msg = msg .. "\nCache keys:\n"
-
-    local found = false
-    local count = 0
-    for filepath, annotations in pairs(data.list or {}) do
-      count = count + 1
-      local match = filepath == abs_path
-      msg = msg .. (match and "✓ " or "  ") .. filepath .. " (" .. #annotations .. " routines)\n"
-      if match then
-        found = true
-      end
-    end
-
-    msg = msg .. "\nTotal files in cache: " .. count
-    if not found then
-      msg = msg .. "\n\n✗ NO MATCH in cache"
-    else
-      msg = msg .. "\n\n✓ MATCH FOUND"
-    end
-
-    vim.notify(msg, vim.log.levels.INFO)
-  end, {})
 
   def("PProfLoad", function(a)
     local path = a.args ~= "" and a.args or nil
