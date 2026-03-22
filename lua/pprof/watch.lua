@@ -2,70 +2,95 @@ local M = {}
 
 local config = require("pprof.config")
 
-local _watcher = nil
-local _timer = nil
+-- vim.uv is the preferred alias in Neovim 0.10+; fall back to vim.loop for 0.9
+local uv = vim.uv or vim.loop
 
---- Start watching a file for changes, calling callback (debounced) on each change.
+local fs_event       = nil
+local debounce_timer = nil
+
+--- @class WatchEvent
+--- @field change? boolean
+--- @field rename? boolean
+
 --- @param path string
---- @param callback fun()
-function M.start(path, callback)
-  M.stop()
+--- @param change_cb fun()
+--- @param events? WatchEvent
+local start
 
-  local debounce_ms = (config.opts.auto_reload and config.opts.auto_reload.timeout_ms) or 500
+start = function(path, change_cb, events)
+  if fs_event ~= nil then
+    M.stop()
+  end
 
-  local timer = vim.uv.new_timer()
-  local watcher = vim.uv.new_fs_event()
-
-  if not watcher or not timer then
-    if timer and not timer:is_closing() then timer:close() end
-    if watcher and not watcher:is_closing() then watcher:close() end
-    vim.schedule(function()
-      vim.notify("pprof: failed to create file watcher", vim.log.levels.ERROR)
-    end)
+  -- File may not yet exist (e.g. right after a rename); retry after debounce delay
+  if vim.fn.filereadable(path) == 0 then
+    local timeout_ms = (config.opts.auto_reload and config.opts.auto_reload.timeout_ms) or 500
+    vim.defer_fn(function()
+      start(path, change_cb, events or { rename = true })
+    end, timeout_ms)
     return
   end
 
-  _timer = timer
-  _watcher = watcher
+  -- Fire immediately if we were triggered by a rename (file replaced on disk)
+  if events ~= nil and events.rename then
+    change_cb()
+  end
 
-  watcher:start(path, {}, function(err)
-    if err then
-      return
+  fs_event = uv.new_fs_event()
+  uv.fs_event_start(
+    fs_event,
+    path,
+    { watch_entry = false, stat = false, recursive = false },
+    function(err, _, ev)
+      if err then
+        vim.schedule(function()
+          vim.notify("pprof: watch error: " .. err, vim.log.levels.ERROR)
+        end)
+        M.stop()
+      elseif ev.rename then
+        -- File was replaced; restart the watcher once it becomes readable again
+        if debounce_timer ~= nil then
+          uv.timer_stop(debounce_timer)
+        end
+        debounce_timer = vim.defer_fn(function()
+          start(path, change_cb, ev)
+        end, 0)
+      else
+        local timeout_ms = (config.opts.auto_reload and config.opts.auto_reload.timeout_ms) or 500
+        if debounce_timer ~= nil then
+          uv.timer_stop(debounce_timer)
+        end
+        debounce_timer = vim.defer_fn(function()
+          debounce_timer = nil
+          change_cb()
+        end, timeout_ms)
+      end
     end
-    -- Restart debounce timer on each change event
-    timer:stop()
-    timer:start(debounce_ms, 0, function()
-      timer:stop()
-      vim.schedule(callback)
-    end)
-  end)
+  )
 end
 
---- Stop the file watcher and cancel any pending debounce timer.
---- Timer must be cancelled before stopping the watcher.
-function M.stop()
-  -- Cancel pending debounce timer first (critical ordering)
-  if _timer then
-    _timer:stop()
-    if not _timer:is_closing() then
-      _timer:close()
-    end
-    _timer = nil
-  end
+--- Start watching a file for changes, calling change_cb (debounced) on each change.
+--- Handles rename events so atomic-replace writes (e.g. go test -cpuprofile) are caught.
+--- @param path string
+--- @param change_cb fun()
+M.start = start
 
-  if _watcher then
-    if not _watcher:is_closing() then
-      _watcher:stop()
-      _watcher:close()
-    end
-    _watcher = nil
+--- Stop the file watcher and cancel any pending debounce timer.
+M.stop = function()
+  if debounce_timer ~= nil then
+    uv.timer_stop(debounce_timer)
+    debounce_timer = nil
   end
+  if fs_event ~= nil then
+    uv.fs_event_stop(fs_event)
+  end
+  fs_event = nil
 end
 
 --- Check if actively watching a file.
 --- @return boolean
-function M.is_watching()
-  return _watcher ~= nil
+M.is_watching = function()
+  return fs_event ~= nil
 end
 
 return M
