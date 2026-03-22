@@ -35,14 +35,15 @@ end
 
 --- Parse the output of `pprof -list .`.
 --- @param text string
---- @return { list: table<string, RoutineAnnotation[]>, total_str: string }
+--- @return { list: table<string, RoutineAnnotation[]>, total_str: string, profile_type: string }
 function M.parse(text)
   if text == nil or text == "" then
-    return { list = {}, total_str = "" }
+    return { list = {}, total_str = "", profile_type = "" }
   end
 
   local result = {}     -- keyed by file path -> RoutineAnnotation[]
   local total_str = ""
+  local profile_type = ""
 
   local current_routine = nil  --- @type RoutineAnnotation|nil
 
@@ -74,6 +75,13 @@ function M.parse(text)
   end
 
   for line in text:gmatch("[^\n]+") do
+    -- Type line: "Type: cpu" / "Type: heap" / "Type: alloc" etc.
+    local ptype = line:match("^Type:%s+(.+)$")
+    if ptype then
+      profile_type = ptype:match("^%s*(.-)%s*$")
+      goto continue
+    end
+
     -- Total line: "Total: 1.20s"
     local total = line:match("^Total:%s+(.+)$")
     if total then
@@ -136,7 +144,7 @@ function M.parse(text)
 
   flush_routine()
 
-  return { list = result, total_str = total_str }
+  return { list = result, total_str = total_str, profile_type = profile_type }
 end
 
 return M

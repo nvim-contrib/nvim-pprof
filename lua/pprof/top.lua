@@ -9,10 +9,12 @@ local _state = {
   win = nil,
   entries = nil, -- current sorted entries
   total_str = nil,
+  profile_type = nil,
 }
 
 local HEADER_HL = "PprofTopHeader"
 local COLHDR_HL = "PprofTopColHeader"
+local BAR_WIDTH  = 10
 
 --- Define highlight groups for the top window from config.
 local function setup_highlights()
@@ -45,27 +47,39 @@ local function apply_highlights(bufnr, highlights)
   end
 end
 
+--- Build a fixed-width ASCII bar representing a 0–1 heat value.
+--- @param heat number  0.0..1.0
+--- @return string  exactly BAR_WIDTH chars
+local function make_bar(heat)
+  local filled = math.floor(heat * BAR_WIDTH + 0.5)
+  return string.rep("█", filled) .. string.rep("░", BAR_WIDTH - filled)
+end
+
 --- Format a single row for a TopEntry, function name first.
 --- @param entry TopEntry
 --- @param name_w integer  width of the function name column
+--- @param max_pct number  highest flat_pct in the list (for bar normalisation)
 --- @return string
-local function format_row(entry, name_w)
+local function format_row(entry, name_w, max_pct)
+  local heat = max_pct > 0 and (entry.flat_pct / max_pct) or 0
   return string.format(
-    "  %-" .. name_w .. "s  %8s  %6.2f%%  %6.2f%%  %8s  %6.2f%%",
+    "  %-" .. name_w .. "s  %8s  %6.2f%%  %6.2f%%  %8s  %6.2f%%  %s",
     entry.func_name,
     entry.flat_str,
     entry.flat_pct,
     entry.sum_pct,
     entry.cum_str,
-    entry.cum_pct
+    entry.cum_pct,
+    make_bar(heat)
   )
 end
 
 --- Build display lines and highlights from entries.
 --- @param entries TopEntry[]
 --- @param total_str string
+--- @param profile_type string
 --- @return string[], {hl_group:string, line:integer, col_start:integer, col_end:integer}[]
-local function build_lines(entries, total_str)
+local function build_lines(entries, total_str, profile_type)
   local name_w = #"function"
   for _, entry in ipairs(entries) do
     if #entry.func_name > name_w then
@@ -87,12 +101,13 @@ local function build_lines(entries, total_str)
   local lines      = {}
   local highlights = {}
 
-  lines[#lines + 1] = string.format("Top Functions (total: %s)", total_str)
+  local type_label = (profile_type and profile_type ~= "") and (" [" .. profile_type .. "]") or ""
+  lines[#lines + 1] = string.format("Top Functions%s  (total: %s)", type_label, total_str)
   table.insert(highlights, { hl_group = HEADER_HL, line = 0, col_start = 0, col_end = -1 })
 
   lines[#lines + 1] = string.format(
-    "  %-" .. name_w .. "s  %8s  %6s   %6s   %8s  %6s",
-    "function", "flat", "flat%", "sum%", "cum", "cum%"
+    "  %-" .. name_w .. "s  %8s  %6s   %6s   %8s  %6s  %-" .. BAR_WIDTH .. "s",
+    "function", "flat", "flat%", "sum%", "cum", "cum%", "bar"
   )
   table.insert(highlights, { hl_group = COLHDR_HL, line = 1, col_start = 0, col_end = -1 })
 
@@ -100,7 +115,7 @@ local function build_lines(entries, total_str)
 
   for i, entry in ipairs(entries) do
     local row = i + 2  -- 0-based: title(0), colhdr(1), sep(2), data(3+)
-    lines[#lines + 1] = format_row(entry, name_w)
+    lines[#lines + 1] = format_row(entry, name_w, max_pct)
 
     -- Whole-row heat gradient, normalised against the hottest entry
     local heat  = max_pct > 0 and (entry.flat_pct / max_pct) or 0
@@ -221,7 +236,7 @@ local function redraw(entries)
     return
   end
   _state.entries = entries
-  local lines, highlights = build_lines(entries, _state.total_str)
+  local lines, highlights = build_lines(entries, _state.total_str, _state.profile_type)
 
   vim.bo[_state.bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(_state.bufnr, 0, -1, false, lines)
@@ -244,16 +259,18 @@ end
 
 --- @param entries TopEntry[]
 --- @param total_str string
-function M.show(entries, total_str)
+--- @param profile_type? string
+function M.show(entries, total_str, profile_type)
   -- Close existing window if open
   M.close()
 
   setup_highlights()
 
-  _state.total_str = total_str
-  _state.entries = entries
+  _state.total_str    = total_str
+  _state.entries      = entries
+  _state.profile_type = profile_type or ""
 
-  local lines, highlights = build_lines(entries, total_str)
+  local lines, highlights = build_lines(entries, total_str, _state.profile_type)
 
   -- Create scratch buffer
   local bufnr = vim.api.nvim_create_buf(false, true)

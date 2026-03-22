@@ -82,6 +82,7 @@ local function do_load(path)
       list         = normalized_list,
       top          = parsed_top,
       total_str    = parsed_list.total_str,
+      profile_type = parsed_list.profile_type or "",
     })
 
     apply_to_open_buffers()
@@ -337,7 +338,7 @@ function M.top(count)
     entries = vim.list_slice(entries, 1, count)
   end
 
-  top_win.show(entries, data.total_str or "")
+  top_win.show(entries, data.total_str or "", data.profile_type or "")
 end
 
 --- Show peek (callers/callees) for a function in a floating window.

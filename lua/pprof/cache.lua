@@ -3,6 +3,7 @@
 --- @field list table<string, RoutineAnnotation[]>  keyed by absolute file path
 --- @field top TopEntry[]
 --- @field total_str string
+--- @field profile_type string  e.g. "cpu", "heap", "alloc", "mutex", "block"
 
 local M = {}
 
