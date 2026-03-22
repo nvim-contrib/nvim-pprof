@@ -73,6 +73,14 @@ require("pprof").setup({
   -- register :PProf* commands (default: true)
   commands = true,
 
+  -- glob patterns searched in cwd when no file is given to :PProfLoad
+  file = {
+    "cpu.prof",
+    "mem.prof",
+    "*.prof",
+    "*.pprof",
+  },
+
   auto_reload = {
     enabled    = false, -- auto-reload profile when .prof file changes on disk
     timeout_ms = 500,   -- debounce delay before reloading

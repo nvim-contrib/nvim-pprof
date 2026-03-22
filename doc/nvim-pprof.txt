@@ -32,6 +32,15 @@ Valid keys for {opts}:
         Boolean. When true, register `:PProf*` user commands on setup.
         Defaults to: `true`
 
+    file: ~
+        List of glob patterns (relative to cwd) searched when no explicit
+        path is given to |:PProfLoad| or |pprof.load()|. Patterns are
+        tried in order and results are deduplicated. Supports wildcards
+        (`*.prof`) and subdirectory paths (`profiles/cpu.prof`).
+        Defaults to: >
+            { "cpu.prof", "mem.prof", "*.prof", "*.pprof" }
+<
+
     auto_reload: ~
         Table controlling file watching behaviour.
 

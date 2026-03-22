@@ -59,6 +59,7 @@
 --- @class Configuration
 --- @field pprof_bin string
 --- @field commands boolean
+--- @field file string[]  glob patterns (relative to cwd) used for auto-discovery
 --- @field signs SignsOpts
 --- @field line_hints LineHintsOpts
 --- @field highlights HighlightsOpts
@@ -75,6 +76,12 @@ local M = {
 local defaults = {
   pprof_bin = "go",
   commands = true,
+  file = {
+    "cpu.prof",
+    "mem.prof",
+    "*.prof",
+    "*.pprof",
+  },
   signs = {
     cold        = { hl = "PprofHeatCold", text = "▎" },
     warm        = { hl = "PprofHeatWarm", text = "▎" },

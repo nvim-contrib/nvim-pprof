@@ -203,18 +203,29 @@ function M.setup(opts)
 end
 
 --- Load a pprof profile file.
---- @param path string|nil  path to .prof file; if nil, searches cwd
---- @param use_picker boolean|nil  if true, always show vim.ui.select for multiple files
+--- @param path string|nil  path to profile file; if nil, searches cwd using config.file patterns
+--- @param use_picker boolean|nil  if true, always show vim.ui.select even for a single match
 function M.load(path, use_picker)
   if path and path ~= "" then
     do_load(vim.fn.expand(path))
     return
   end
 
-  local prof_files = vim.fn.glob(vim.fn.getcwd() .. "/*.prof", false, true)
+  local patterns = config.opts.file or { "*.prof", "*.pprof" }
+  local cwd = vim.fn.getcwd()
+  local seen = {}
+  local prof_files = {}
+  for _, pat in ipairs(patterns) do
+    for _, f in ipairs(vim.fn.glob(cwd .. "/" .. pat, false, true)) do
+      if not seen[f] then
+        seen[f] = true
+        prof_files[#prof_files + 1] = f
+      end
+    end
+  end
 
   if #prof_files == 0 then
-    vim.notify("pprof: no .prof files found in current directory", vim.log.levels.WARN)
+    vim.notify("pprof: no profile files found in current directory", vim.log.levels.WARN)
     return
   end
 
