@@ -233,7 +233,7 @@ end
 --- Re-render signs on all buffers that currently have signs visible.
 local function reapply_signs()
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_loaded(bufnr) and signs.is_visible(bufnr) then
+    if vim.api.nvim_buf_is_loaded(bufnr) and signs.is_enabled(bufnr) then
       signs.show(bufnr)
     end
   end

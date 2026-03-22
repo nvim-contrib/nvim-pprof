@@ -77,7 +77,7 @@ local function dedup_lines(annotations)
 end
 
 --- @param bufnr? integer
-function M.show(bufnr)
+M.show = function(bufnr)
   bufnr = get_bufnr(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then return end
 
@@ -149,7 +149,7 @@ function M.show(bufnr)
 end
 
 --- @param bufnr? integer
-function M.hide(bufnr)
+M.hide = function(bufnr)
   bufnr = get_bufnr(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then return end
   local sg = (config.opts.signs and config.opts.signs.group) or "pprof"
@@ -161,9 +161,9 @@ function M.hide(bufnr)
 end
 
 --- @param bufnr? integer
-function M.toggle(bufnr)
+M.toggle = function(bufnr)
   bufnr = get_bufnr(bufnr)
-  if M.is_visible(bufnr) then
+  if M.is_enabled(bufnr) then
     M.hide(bufnr)
   else
     M.show(bufnr)
@@ -172,14 +172,14 @@ end
 
 --- @param bufnr? integer
 --- @return boolean
-function M.is_visible(bufnr)
+M.is_enabled = function(bufnr)
   bufnr = get_bufnr(bufnr)
   return visible[bufnr] == true
 end
 
 --- Jumps to the next or previous hotspot sign in the current buffer.
 --- @param direction? -1|1 Defaults to 1 (forward)
-function M.jump(direction)
+M.jump = function(direction)
   local bufnr = get_bufnr(nil)
   local buf_lnums = lnums[bufnr]
   if not buf_lnums or #buf_lnums == 0 then return end
