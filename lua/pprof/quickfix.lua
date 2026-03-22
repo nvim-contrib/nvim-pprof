@@ -4,7 +4,7 @@ local cache = require("pprof.cache")
 local util  = require("pprof.util")
 
 --- Populate the quickfix list with one entry per profiled file.
-function M.populate()
+M.populate = function()
   local profile = cache.get()
   if not profile then
     vim.notify("pprof: no profile data loaded", vim.log.levels.WARN)
@@ -60,13 +60,13 @@ function M.populate()
     items[#items + 1] = {
       filename = row.filename,
       lnum     = row.lnum,
-      col      = 1,
+      col      = 0,
       text     = flat_str .. " flat | " .. cum_str .. " cum",
     }
   end
 
   vim.fn.setqflist({}, "r", { title = "pprof", items = items })
-  vim.cmd.copen()
+  vim.cmd("copen")
 end
 
 return M

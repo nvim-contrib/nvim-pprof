@@ -3,7 +3,7 @@ local M = {}
 local cache = require("pprof.cache")
 
 --- Populate the location list with all hotspot lines from the current profile.
-function M.populate()
+M.populate = function()
   local profile = cache.get()
   if not profile then
     vim.notify("pprof: no profile data loaded", vim.log.levels.WARN)
@@ -47,8 +47,8 @@ function M.populate()
     }
   end
 
-  vim.fn.setloclist(0, loclist_items, "r")
-  vim.cmd.lopen()
+  vim.fn.setloclist(0, {}, "r", { title = "Pprof: hotspot lines", items = loclist_items })
+  vim.cmd("lopen")
 end
 
 return M
