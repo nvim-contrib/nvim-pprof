@@ -286,16 +286,16 @@ pprof.load({file}, {use_picker})
     interactive file picker. Also starts the file watcher when
     `auto_reload.enabled` is true.
 
-                                                         *pprof.show_signs()*
-pprof.show_signs()
+                                                         *pprof.show_line_signs()*
+pprof.show_line_signs()
     Show heat-gradient signs for the current buffer.
 
-                                                         *pprof.hide_signs()*
-pprof.hide_signs()
+                                                         *pprof.hide_line_signs()*
+pprof.hide_line_signs()
     Hide heat-gradient signs for the current buffer.
 
-                                                       *pprof.toggle_signs()*
-pprof.toggle_signs()
+                                                       *pprof.toggle_line_signs()*
+pprof.toggle_line_signs()
     Toggle heat-gradient signs for the current buffer.
 
                                                         *pprof.show_signhl()*
@@ -334,17 +334,17 @@ pprof.hide_linehl()
 pprof.toggle_linehl()
     Toggle full-line background coloring and re-render all visible buffers.
 
-                                                         *pprof.show_hints()*
-pprof.show_hints()
+                                                         *pprof.show_line_hints()*
+pprof.show_line_hints()
     Show inline hints (virtual text with flat/cumulative values) for the
     current buffer.
 
-                                                         *pprof.hide_hints()*
-pprof.hide_hints()
+                                                         *pprof.hide_line_hints()*
+pprof.hide_line_hints()
     Hide inline hints for the current buffer.
 
-                                                       *pprof.toggle_hints()*
-pprof.toggle_hints()
+                                                       *pprof.toggle_line_hints()*
+pprof.toggle_line_hints()
     Toggle inline hints for the current buffer.
 
                                                                 *pprof.top()*

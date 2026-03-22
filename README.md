@@ -168,9 +168,9 @@ pprof.load("path/to/cpu.prof")        -- load from explicit path
 pprof.load(nil, true)                 -- force picker
 
 -- signs (all channels)
-pprof.show_signs()
-pprof.hide_signs()
-pprof.toggle_signs()
+pprof.show_line_signs()
+pprof.hide_line_signs()
+pprof.toggle_line_signs()
 
 -- sign column glyph / line number / full-line background (runtime toggles)
 pprof.show_signhl()   pprof.hide_signhl()   pprof.toggle_signhl()
@@ -178,9 +178,9 @@ pprof.show_numhl()    pprof.hide_numhl()    pprof.toggle_numhl()
 pprof.show_linehl()   pprof.hide_linehl()   pprof.toggle_linehl()
 
 -- inline hints
-pprof.show_hints()
-pprof.hide_hints()
-pprof.toggle_hints()
+pprof.show_line_hints()
+pprof.hide_line_hints()
+pprof.toggle_line_hints()
 
 -- floating windows
 pprof.top(count)

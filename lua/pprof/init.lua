@@ -178,9 +178,9 @@ local function register_commands()
   def(
     "PProfSigns",
     action_cmd({
-      show = M.show_signs,
-      hide = M.hide_signs,
-      toggle = M.toggle_signs,
+      show = M.show_line_signs,
+      hide = M.hide_line_signs,
+      toggle = M.toggle_line_signs,
     }),
     { nargs = "?", complete = action_complete }
   )
@@ -188,9 +188,9 @@ local function register_commands()
   def(
     "PProfHints",
     action_cmd({
-      show = M.show_hints,
-      hide = M.hide_hints,
-      toggle = M.toggle_hints,
+      show = M.show_line_hints,
+      hide = M.hide_line_hints,
+      toggle = M.toggle_line_hints,
     }),
     { nargs = "?", complete = action_complete }
   )
@@ -276,17 +276,17 @@ local function reapply_signs()
 end
 
 --- Show heat-gradient signs for the current buffer.
-function M.show_signs()
+function M.show_line_signs()
   signs.show()
 end
 
 --- Hide heat-gradient signs for the current buffer.
-function M.hide_signs()
+function M.hide_line_signs()
   signs.hide()
 end
 
 --- Toggle heat-gradient signs for the current buffer.
-function M.toggle_signs()
+function M.toggle_line_signs()
   signs.toggle()
 end
 
@@ -345,17 +345,17 @@ function M.toggle_linehl()
 end
 
 --- Show inline hints for the current buffer.
-function M.show_hints()
+function M.show_line_hints()
   hints.show()
 end
 
 --- Hide inline hints for the current buffer.
-function M.hide_hints()
+function M.hide_line_hints()
   hints.hide()
 end
 
 --- Toggle inline hints for the current buffer.
-function M.toggle_hints()
+function M.toggle_line_hints()
   hints.toggle()
 end
 
