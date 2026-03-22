@@ -2,6 +2,7 @@ local M = {}
 
 local cache  = require("pprof.cache")
 local config = require("pprof.config")
+local util   = require("pprof.util")
 
 local _state = {
   bufnr = nil,
@@ -21,6 +22,27 @@ local function setup_highlights()
   vim.api.nvim_set_hl(0, "PprofTopBorder",     top_hl.border      or { link = "FloatBorder" })
   vim.api.nvim_set_hl(0, "PprofTopNormal",     top_hl.normal      or { link = "NormalFloat" })
   vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line or { link = "CursorLine" })
+end
+
+--- Apply per-row heat highlights to data rows in the top buffer.
+--- Rows are coloured using PprofHeat* groups, normalised against the
+--- highest flat_pct in the current entry list.
+--- @param bufnr integer
+--- @param entries TopEntry[]
+local function apply_row_highlights(bufnr, entries)
+  local levels = (config.opts.signs and config.opts.signs.heat_levels) or 5
+
+  local max_pct = 0
+  for _, entry in ipairs(entries) do
+    if entry.flat_pct > max_pct then max_pct = entry.flat_pct end
+  end
+
+  -- Data rows start at line index 3 (0-based): title(0), colhdr(1), sep(2), data(3+)
+  for i, entry in ipairs(entries) do
+    local heat  = max_pct > 0 and (entry.flat_pct / max_pct) or 0
+    local level = util.heat_to_level(heat, levels)
+    vim.api.nvim_buf_add_highlight(bufnr, -1, "PprofHeat" .. level, i + 2, 0, -1)
+  end
 end
 
 --- Format a single row for a TopEntry, function name first.
@@ -119,12 +141,11 @@ local function jump_to_func()
     return
   end
 
-  -- func_name is the last whitespace-separated token
-  local func_name = line:match("%S+%s*$")
+  -- func_name is the first token (left-aligned in column 0)
+  local func_name = vim.trim(line):match("^(%S+)")
   if not func_name then
     return
   end
-  func_name = vim.trim(func_name)
 
   -- Look up in cache for a matching file/routine
   local profile = cache.get()
@@ -178,6 +199,7 @@ local function redraw(entries)
   -- Reapply highlights
   vim.api.nvim_buf_add_highlight(_state.bufnr, -1, HEADER_HL, 0, 0, -1)
   vim.api.nvim_buf_add_highlight(_state.bufnr, -1, COLHDR_HL, 1, 0, -1)
+  apply_row_highlights(_state.bufnr, entries)
 
   -- Resize window to fit new content if still valid
   if _state.win and vim.api.nvim_win_is_valid(_state.win) then
@@ -215,9 +237,10 @@ function M.show(entries, total_str)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.bo[bufnr].modifiable = false
 
-  -- Highlight header rows
+  -- Highlight header rows and data rows
   vim.api.nvim_buf_add_highlight(bufnr, -1, HEADER_HL, 0, 0, -1)
   vim.api.nvim_buf_add_highlight(bufnr, -1, COLHDR_HL, 1, 0, -1)
+  apply_row_highlights(bufnr, entries)
 
   -- Open float
   local cfg = float_config(lines)
