@@ -26,7 +26,7 @@
 
 ## Installation
 
-Using [lazy.nvim](https://github.com/folke/lazy.nvim):
+### lazy.nvim
 
 ```lua
 {
@@ -35,7 +35,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 }
 ```
 
-Using [packer.nvim](https://github.com/wbthomason/packer.nvim):
+### packer.nvim
 
 ```lua
 use({
@@ -48,38 +48,32 @@ use({
 
 ## Generating profile files
 
-Generate a CPU profile by running your Go tests or application with profiling enabled:
+The plugin reads a pre-generated pprof profile — it does not run tests itself.
 
-```sh
-# CPU profile from tests
-go test -cpuprofile cpu.prof -bench .
+By default the plugin searches for profile files in the current working
+directory using the patterns `cpu.prof`, `mem.prof`, `*.prof`, `*.pprof`.
+Override with the `file` option if your tool writes elsewhere.
 
-# Memory profile from tests
-go test -memprofile mem.prof -bench .
-
-# CPU profile from a running application
-go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
-```
-
-The resulting `.prof` files can be loaded directly by nvim-pprof.
+| Profile type | Command | Default file |
+| ------------ | ------- | ------------ |
+| CPU (tests)  | `go test -cpuprofile cpu.prof -bench .` | `cpu.prof` |
+| Memory (tests) | `go test -memprofile mem.prof -bench .` | `mem.prof` |
+| Block / mutex | `go test -blockprofile block.prof` | `block.prof` |
+| CPU (live app) | `go tool pprof http://localhost:6060/debug/pprof/profile` | *(pass path directly)* |
 
 ## Configuration
 
 ```lua
 require("pprof").setup({
-  -- path to the Go binary used to invoke `go tool pprof`
-  pprof_bin = "go",
+  -- binary used to invoke pprof; defaults to "go" (runs `go tool pprof`)
+  -- pprof_bin = "go",
+
+  -- glob patterns searched in cwd when no path is given to :PProfLoad
+  -- defaults to: { "cpu.prof", "mem.prof", "*.prof", "*.pprof" }
+  -- file = { "cpu.prof", "*.prof" },
 
   -- register :PProf* commands (default: true)
   commands = true,
-
-  -- glob patterns searched in cwd when no file is given to :PProfLoad
-  file = {
-    "cpu.prof",
-    "mem.prof",
-    "*.prof",
-    "*.pprof",
-  },
 
   auto_reload = {
     enabled    = false, -- auto-reload profile when .prof file changes on disk
@@ -100,14 +94,12 @@ require("pprof").setup({
     heat_levels = 5,        -- number of gradient steps between cold and hot
   },
 
-  -- heat gradient anchor colors (cold → warm → hot)
   highlights = {
     cold = { fg = "#3b82f6", bg = "#1e3a5f" },
     warm = { fg = "#f59e0b", bg = "#7a4f05" },
     hot  = { fg = "#ef4444", bg = "#7f1d1d" },
   },
 
-  -- inline virtual text showing flat/cum values per line
   line_hints = {
     enabled   = false,                     -- show hints automatically after load
     format    = "{flat} flat | {cum} cum", -- {flat} and {cum} are substituted
@@ -115,7 +107,6 @@ require("pprof").setup({
     highlight = { link = "Comment" },
   },
 
-  -- top-N function summary floating window
   top = {
     default_count = 20,
     border        = "rounded",
@@ -129,12 +120,11 @@ require("pprof").setup({
       border        = { link = "FloatBorder" },
       normal        = { link = "NormalFloat" },
       cursor_line   = { link = "CursorLine" },
-      pass          = { link = "Comment" },       -- flat% below threshold
-      fail          = { link = "DiagnosticWarn" }, -- flat% at or above threshold
+      pass          = { link = "Comment" },        -- flat% below threshold
+      fail          = { link = "DiagnosticWarn" },  -- flat% at or above threshold
     },
   },
 
-  -- callers/callees peek floating window
   peek = {
     border  = "rounded",
     width   = 0,  -- 0 = auto-size to content; fraction > 0 = fixed ratio
@@ -156,12 +146,12 @@ require("pprof").setup({
 
 | Command                | Description                                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------------- |
-| `:PProfLoad[!] [file]` | Load a `.prof` file. No argument auto-finds in cwd. `!` shows a picker when multiple files are found |
-| `:PProfSigns [action]` | Show/hide/toggle heat signs. Default: toggle                                                         |
-| `:PProfHints [action]` | Show/hide/toggle inline hints. Default: toggle                                                       |
+| `:PProfLoad[!] [file]` | Load a profile file. No argument auto-finds in cwd. `!` always shows a picker                       |
+| `:PProfSigns [action]` | Show/hide/toggle heat signs. Default: `toggle`                                                       |
+| `:PProfHints [action]` | Show/hide/toggle inline hints. Default: `toggle`                                                     |
 | `:PProfTop [count]`    | Show top-N functions in a floating window                                                            |
 | `:PProfPeek [func]`    | Show callers/callees. No argument uses treesitter to detect the function at cursor                   |
-| `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                               |
+| `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                              |
 | `:PProfLoclist`        | Populate location list with hotspot lines                                                            |
 | `:PProfClear`          | Clear all profile data, signs, hints, and floats                                                     |
 
@@ -173,7 +163,7 @@ require("pprof").setup({
 local pprof = require("pprof")
 
 -- load
-pprof.load()                          -- auto-find .prof in cwd
+pprof.load()                          -- auto-find in cwd using config.file patterns
 pprof.load("path/to/cpu.prof")        -- load from explicit path
 pprof.load(nil, true)                 -- force picker
 
@@ -210,12 +200,12 @@ pprof.clear()
 
 ### Top window keys
 
-| Key         | Action                                    |
-| ----------- | ----------------------------------------- |
-| `sf`        | Sort by flat                              |
-| `sc`        | Sort by cum                               |
-| `Enter`     | Jump to source for function under cursor  |
-| `q` / `Esc` | Close                                     |
+| Key         | Action                                   |
+| ----------- | ---------------------------------------- |
+| `sf`        | Sort by flat                             |
+| `sc`        | Sort by cum                              |
+| `Enter`     | Jump to source for function under cursor |
+| `q` / `Esc` | Close                                    |
 
 The window title shows the detected profile type (e.g. `[cpu]`, `[heap]`).
 Each row includes a 10-character sparkline bar (█░) normalised to the hottest
@@ -245,15 +235,11 @@ vim.keymap.set("n", "<leader>pp", "<cmd>PProfPeek<CR>",
 
 ![peek](doc/tapes/output/peek.png)
 
-## Neotest integration
+### neotest integration
 
-nvim-pprof ships two neotest consumers that auto-reload the profile after
-every test run.
+The plugin ships built-in neotest consumers so the profile reloads automatically after every test run.
 
-### Generic consumer
-
-Auto-discovers a profile in cwd after every run using the configured `file`
-patterns:
+**Generic consumer** — works for any setup where the profile file is written to a known location in cwd:
 
 ```lua
 require("neotest").setup({
@@ -263,10 +249,7 @@ require("neotest").setup({
 })
 ```
 
-### Go consumer
-
-Searches the neotest output directories for profile files first, then falls
-back to cwd. Configure neotest-go to emit a profile:
+**Go consumer** — searches the neotest output directories for profile files first, then falls back to cwd. Configure neotest-go to emit a profile:
 
 ```lua
 require("neotest").setup({
@@ -281,9 +264,20 @@ require("neotest").setup({
 })
 ```
 
+Both consumers can be combined:
+
+```lua
+require("neotest").setup({
+  consumers = {
+    pprof    = require("pprof.neotest"),
+    pprof_go = require("pprof.neotest.go"),
+  },
+})
+```
+
 ## Contributing
 
-Contributions are welcome! Please open an issue or pull request on
+Contributions are welcome. Please open an issue or pull request on
 [GitHub](https://github.com/nvim-contrib/nvim-pprof).
 
 ## License
