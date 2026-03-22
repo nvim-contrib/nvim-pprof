@@ -1,4 +1,4 @@
-local util   = require("pprof.util")
+local util = require("pprof.util")
 local config = require("pprof.config")
 
 local M = {}
@@ -8,10 +8,10 @@ local M = {}
 --- @param levels integer total levels
 --- @return string fg, string bg
 local function gradient_colors(level, levels)
-  local hl  = config.opts.highlights or {}
+  local hl = config.opts.highlights or {}
   local cold = hl.cold or { fg = "#3b82f6", bg = "#1e3a5f" }
   local warm = hl.warm or { fg = "#f59e0b", bg = "#7a4f05" }
-  local hot  = hl.hot  or { fg = "#ef4444", bg = "#7f1d1d" }
+  local hot = hl.hot or { fg = "#ef4444", bg = "#7f1d1d" }
 
   if levels <= 1 then
     return hot.fg, hot.bg
@@ -55,15 +55,15 @@ function M.setup(heat_levels)
   end
 
   -- Named anchor groups for cold / warm / hot
-  local hl    = config.opts.highlights or {}
+  local hl = config.opts.highlights or {}
   local signs = config.opts.signs or {}
-  local cold  = hl.cold or { fg = "#3b82f6", bg = "#1e3a5f" }
-  local warm  = hl.warm or { fg = "#f59e0b", bg = "#7a4f05" }
-  local hot   = hl.hot  or { fg = "#ef4444", bg = "#7f1d1d" }
+  local cold = hl.cold or { fg = "#3b82f6", bg = "#1e3a5f" }
+  local warm = hl.warm or { fg = "#f59e0b", bg = "#7a4f05" }
+  local hot = hl.hot or { fg = "#ef4444", bg = "#7f1d1d" }
 
   vim.api.nvim_set_hl(0, (signs.cold and signs.cold.hl) or "PprofHeatCold", { fg = cold.fg, bg = cold.bg })
   vim.api.nvim_set_hl(0, (signs.warm and signs.warm.hl) or "PprofHeatWarm", { fg = warm.fg, bg = warm.bg })
-  vim.api.nvim_set_hl(0, (signs.hot  and signs.hot.hl)  or "PprofHeatHot",  { fg = hot.fg,  bg = hot.bg  })
+  vim.api.nvim_set_hl(0, (signs.hot and signs.hot.hl) or "PprofHeatHot", { fg = hot.fg, bg = hot.bg })
 
   -- Hint text highlight
   local hint_hl = (config.opts.line_hints and config.opts.line_hints.highlight) or { link = "Comment" }

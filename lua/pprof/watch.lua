@@ -5,7 +5,7 @@ local config = require("pprof.config")
 -- vim.uv is the preferred alias in Neovim 0.10+; fall back to vim.loop for 0.9
 local uv = vim.uv or vim.loop
 
-local fs_event       = nil
+local fs_event = nil
 local debounce_timer = nil
 
 --- @class WatchEvent
@@ -37,36 +37,31 @@ start = function(path, change_cb, events)
   end
 
   fs_event = uv.new_fs_event()
-  uv.fs_event_start(
-    fs_event,
-    path,
-    { watch_entry = false, stat = false, recursive = false },
-    function(err, _, ev)
-      if err then
-        vim.schedule(function()
-          vim.notify("pprof: watch error: " .. err, vim.log.levels.ERROR)
-        end)
-        M.stop()
-      elseif ev.rename then
-        -- File was replaced; restart the watcher once it becomes readable again
-        if debounce_timer ~= nil then
-          uv.timer_stop(debounce_timer)
-        end
-        debounce_timer = vim.defer_fn(function()
-          start(path, change_cb, ev)
-        end, 0)
-      else
-        local timeout_ms = (config.opts.auto_reload and config.opts.auto_reload.timeout_ms) or 500
-        if debounce_timer ~= nil then
-          uv.timer_stop(debounce_timer)
-        end
-        debounce_timer = vim.defer_fn(function()
-          debounce_timer = nil
-          change_cb()
-        end, timeout_ms)
+  uv.fs_event_start(fs_event, path, { watch_entry = false, stat = false, recursive = false }, function(err, _, ev)
+    if err then
+      vim.schedule(function()
+        vim.notify("pprof: watch error: " .. err, vim.log.levels.ERROR)
+      end)
+      M.stop()
+    elseif ev.rename then
+      -- File was replaced; restart the watcher once it becomes readable again
+      if debounce_timer ~= nil then
+        uv.timer_stop(debounce_timer)
       end
+      debounce_timer = vim.defer_fn(function()
+        start(path, change_cb, ev)
+      end, 0)
+    else
+      local timeout_ms = (config.opts.auto_reload and config.opts.auto_reload.timeout_ms) or 500
+      if debounce_timer ~= nil then
+        uv.timer_stop(debounce_timer)
+      end
+      debounce_timer = vim.defer_fn(function()
+        debounce_timer = nil
+        change_cb()
+      end, timeout_ms)
     end
-  )
+  end)
 end
 
 --- Start watching a file for changes, calling change_cb (debounced) on each change.

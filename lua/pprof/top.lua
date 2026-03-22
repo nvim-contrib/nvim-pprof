@@ -1,8 +1,8 @@
 local M = {}
 
-local cache  = require("pprof.cache")
+local cache = require("pprof.cache")
 local config = require("pprof.config")
-local util   = require("pprof.util")
+local util = require("pprof.util")
 
 local _state = {
   bufnr = nil,
@@ -14,18 +14,18 @@ local _state = {
 
 local HEADER_HL = "PprofTopHeader"
 local COLHDR_HL = "PprofTopColHeader"
-local BAR_WIDTH  = 10
+local BAR_WIDTH = 10
 
 --- Define highlight groups for the top window from config.
 local function setup_highlights()
   local top_hl = (config.opts.top and config.opts.top.highlights) or {}
-  vim.api.nvim_set_hl(0, HEADER_HL,            top_hl.header        or { link = "Title" })
-  vim.api.nvim_set_hl(0, COLHDR_HL,            top_hl.column_header or { link = "Comment" })
-  vim.api.nvim_set_hl(0, "PprofTopBorder",     top_hl.border        or { link = "FloatBorder" })
-  vim.api.nvim_set_hl(0, "PprofTopNormal",     top_hl.normal        or { link = "NormalFloat" })
-  vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line   or { link = "CursorLine" })
-  vim.api.nvim_set_hl(0, "PprofTopPass",       top_hl.pass          or { link = "Comment" })
-  vim.api.nvim_set_hl(0, "PprofTopFail",       top_hl.fail          or { link = "DiagnosticWarn" })
+  vim.api.nvim_set_hl(0, HEADER_HL, top_hl.header or { link = "Title" })
+  vim.api.nvim_set_hl(0, COLHDR_HL, top_hl.column_header or { link = "Comment" })
+  vim.api.nvim_set_hl(0, "PprofTopBorder", top_hl.border or { link = "FloatBorder" })
+  vim.api.nvim_set_hl(0, "PprofTopNormal", top_hl.normal or { link = "NormalFloat" })
+  vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line or { link = "CursorLine" })
+  vim.api.nvim_set_hl(0, "PprofTopPass", top_hl.pass or { link = "Comment" })
+  vim.api.nvim_set_hl(0, "PprofTopFail", top_hl.fail or { link = "DiagnosticWarn" })
 end
 
 --- Returns the highlight group for the flat% column based on min_flat_pct threshold.
@@ -34,7 +34,9 @@ end
 --- @return string|nil
 local function get_flat_hl_group(flat_pct)
   local min_pct = (config.opts.top and config.opts.top.min_flat_pct) or 5.0
-  if min_pct == 0 then return nil end
+  if min_pct == 0 then
+    return nil
+  end
   return flat_pct >= min_pct and "PprofTopFail" or "PprofTopPass"
 end
 
@@ -87,18 +89,20 @@ local function build_lines(entries, total_str, profile_type)
     end
   end
 
-  local levels  = (config.opts.signs and config.opts.signs.heat_levels) or 5
+  local levels = (config.opts.signs and config.opts.signs.heat_levels) or 5
   local max_pct = 0
   for _, entry in ipairs(entries) do
-    if entry.flat_pct > max_pct then max_pct = entry.flat_pct end
+    if entry.flat_pct > max_pct then
+      max_pct = entry.flat_pct
+    end
   end
 
   -- flat% column byte offset: 2 indent + name_w + 2 sep + 8 flat_str + 2 sep = name_w+14
   -- flat% column byte width:  "%6.2f%%" renders to 7 chars (e.g. " 14.89%")
-  local flat_col     = name_w + 14
+  local flat_col = name_w + 14
   local flat_col_end = flat_col + 7
 
-  local lines      = {}
+  local lines = {}
   local highlights = {}
 
   local type_label = (profile_type and profile_type ~= "") and (" [" .. profile_type .. "]") or ""
@@ -107,18 +111,24 @@ local function build_lines(entries, total_str, profile_type)
 
   lines[#lines + 1] = string.format(
     "  %-" .. name_w .. "s  %8s  %6s   %6s   %8s  %6s  %-" .. BAR_WIDTH .. "s",
-    "function", "flat", "flat%", "sum%", "cum", "cum%", "bar"
+    "function",
+    "flat",
+    "flat%",
+    "sum%",
+    "cum",
+    "cum%",
+    "bar"
   )
   table.insert(highlights, { hl_group = COLHDR_HL, line = 1, col_start = 0, col_end = -1 })
 
   lines[#lines + 1] = string.rep("─", vim.fn.strdisplaywidth(lines[2]))
 
   for i, entry in ipairs(entries) do
-    local row = i + 2  -- 0-based: title(0), colhdr(1), sep(2), data(3+)
+    local row = i + 2 -- 0-based: title(0), colhdr(1), sep(2), data(3+)
     lines[#lines + 1] = format_row(entry, name_w, max_pct)
 
     -- Whole-row heat gradient, normalised against the hottest entry
-    local heat  = max_pct > 0 and (entry.flat_pct / max_pct) or 0
+    local heat = max_pct > 0 and (entry.flat_pct / max_pct) or 0
     local level = util.heat_to_level(heat, levels)
     table.insert(highlights, { hl_group = "PprofHeat" .. level, line = row, col_start = 0, col_end = -1 })
 
@@ -139,17 +149,17 @@ local function float_config(lines)
   local max_w = 0
   for _, l in ipairs(lines) do
     local w = vim.fn.strdisplaywidth(l)
-    if w > max_w then max_w = w end
+    if w > max_w then
+      max_w = w
+    end
   end
 
   local top_cfg = config.opts.top or {}
 
-  local width  = (top_cfg.width  and top_cfg.width  > 0)
-    and math.floor(vim.o.columns * top_cfg.width)
-    or  math.max(25, math.min(max_w + 2, vim.o.columns - 4))
-  local height = (top_cfg.height and top_cfg.height > 0)
-    and math.floor(vim.o.lines * top_cfg.height)
-    or  math.max(3, math.min(#lines, vim.o.lines - 4))
+  local width = (top_cfg.width and top_cfg.width > 0) and math.floor(vim.o.columns * top_cfg.width)
+      or math.max(25, math.min(max_w + 2, vim.o.columns - 4))
+  local height = (top_cfg.height and top_cfg.height > 0) and math.floor(vim.o.lines * top_cfg.height)
+      or math.max(3, math.min(#lines, vim.o.lines - 4))
 
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
@@ -214,7 +224,9 @@ local function jump_to_func()
           break
         end
       end
-      if found_file then break end
+      if found_file then
+        break
+      end
     end
   end
 
@@ -266,8 +278,8 @@ function M.show(entries, total_str, profile_type)
 
   setup_highlights()
 
-  _state.total_str    = total_str
-  _state.entries      = entries
+  _state.total_str = total_str
+  _state.entries = entries
   _state.profile_type = profile_type or ""
 
   local lines, highlights = build_lines(entries, total_str, _state.profile_type)
@@ -308,16 +320,24 @@ function M.show(entries, total_str, profile_type)
   map("<CR>", jump_to_func)
 
   map("sf", function()
-    if not _state.entries then return end
+    if not _state.entries then
+      return
+    end
     local sorted = vim.deepcopy(_state.entries)
-    table.sort(sorted, function(a, b) return a.flat_pct > b.flat_pct end)
+    table.sort(sorted, function(a, b)
+      return a.flat_pct > b.flat_pct
+    end)
     redraw(sorted)
   end)
 
   map("sc", function()
-    if not _state.entries then return end
+    if not _state.entries then
+      return
+    end
     local sorted = vim.deepcopy(_state.entries)
-    table.sort(sorted, function(a, b) return a.cum_pct > b.cum_pct end)
+    table.sort(sorted, function(a, b)
+      return a.cum_pct > b.cum_pct
+    end)
     redraw(sorted)
   end)
 

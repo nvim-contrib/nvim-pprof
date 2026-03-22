@@ -7,10 +7,14 @@ local M = {}
 --- @return string|nil
 local function classify_func_node(node, bufnr)
   local ntype = node:type()
-  if ntype ~= "identifier" and ntype ~= "field_identifier" then return nil end
+  if ntype ~= "identifier" and ntype ~= "field_identifier" then
+    return nil
+  end
 
   local parent = node:parent()
-  if not parent then return nil end
+  if not parent then
+    return nil
+  end
   local ptype = parent:type()
 
   -- Function or method definition name
@@ -62,7 +66,9 @@ function M.func_at_cursor()
   end
 
   local node = trees[1]:root():named_descendant_for_range(row, col, row, col)
-  if not node then return nil, false end
+  if not node then
+    return nil, false
+  end
 
   local name = classify_func_node(node, bufnr)
   return name, name ~= nil

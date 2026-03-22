@@ -1,20 +1,20 @@
-local M = {}
+local M                = {}
 
-local config    = require("pprof.config")
-local cache     = require("pprof.cache")
-local util      = require("pprof.util")
-local highlight = require("pprof.highlight")
+local config           = require("pprof.config")
+local cache            = require("pprof.cache")
+local util             = require("pprof.util")
+local highlight        = require("pprof.highlight")
 
-local sign_prefix     = "PprofHeat"
+local sign_prefix      = "PprofHeat"
 local default_priority = 10
 
 -- Separate namespaces so numhl/linehl clear independently of sign glyphs
-local ns_num  = vim.api.nvim_create_namespace("pprof_numhl")
-local ns_line = vim.api.nvim_create_namespace("pprof_linehl")
+local ns_num           = vim.api.nvim_create_namespace("pprof_numhl")
+local ns_line          = vim.api.nvim_create_namespace("pprof_linehl")
 
-local signs_defined = false
-local visible = {}  -- bufnr -> bool
-local lnums   = {}  -- bufnr -> integer[] sorted hot lnums (for navigation)
+local signs_defined    = false
+local visible          = {} -- bufnr -> bool
+local lnums            = {} -- bufnr -> integer[] sorted hot lnums (for navigation)
 
 local function get_bufnr(bufnr)
   if bufnr == nil or bufnr == 0 then
@@ -98,7 +98,7 @@ M.show = function(bufnr)
 
   -- Clear previous state
   vim.fn.sign_unplacelist({ { buffer = bufnr, group = sg } })
-  vim.api.nvim_buf_clear_namespace(bufnr, ns_num,  0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, ns_num, 0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_line, 0, -1)
 
   ensure_signs_defined()
@@ -154,7 +154,7 @@ M.hide = function(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then return end
   local sg = (config.opts.signs and config.opts.signs.group) or "pprof"
   vim.fn.sign_unplacelist({ { buffer = bufnr, group = sg } })
-  vim.api.nvim_buf_clear_namespace(bufnr, ns_num,  0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, ns_num, 0, -1)
   vim.api.nvim_buf_clear_namespace(bufnr, ns_line, 0, -1)
   visible[bufnr] = false
   lnums[bufnr]   = nil

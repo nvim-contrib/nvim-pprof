@@ -1,18 +1,18 @@
 local M = {}
 
-local config    = require("pprof.config")
-local cache     = require("pprof.cache")
-local pprof     = require("pprof.pprof")
-local parse     = require("pprof.parse")
-local signs     = require("pprof.signs")
-local hints     = require("pprof.hints")
-local top_win   = require("pprof.top")
-local peek_win  = require("pprof.peek")
-local loclist   = require("pprof.loclist")
-local quickfix  = require("pprof.quickfix")
+local config = require("pprof.config")
+local cache = require("pprof.cache")
+local pprof = require("pprof.pprof")
+local parse = require("pprof.parse")
+local signs = require("pprof.signs")
+local hints = require("pprof.hints")
+local top_win = require("pprof.top")
+local peek_win = require("pprof.peek")
+local loclist = require("pprof.loclist")
+local quickfix = require("pprof.quickfix")
 local highlight = require("pprof.highlight")
-local watch     = require("pprof.watch")
-local ts        = require("pprof.ts")
+local watch = require("pprof.watch")
+local ts = require("pprof.ts")
 
 local _autocmd_registered = false
 
@@ -47,14 +47,16 @@ end
 --- @param path string  absolute path to .prof file
 local function do_load(path)
   local list_stdout = nil
-  local top_stdout  = nil
-  local list_err    = nil
-  local top_err     = nil
+  local top_stdout = nil
+  local list_err = nil
+  local top_err = nil
   local pending = 2
 
   local function on_both_done()
     pending = pending - 1
-    if pending > 0 then return end
+    if pending > 0 then
+      return
+    end
 
     if list_err then
       vim.notify("pprof: " .. list_err, vim.log.levels.ERROR)
@@ -66,7 +68,7 @@ local function do_load(path)
     end
 
     local parsed_list = parse.list.parse(list_stdout or "")
-    local parsed_top  = parse.top.parse(top_stdout or "")
+    local parsed_top = parse.top.parse(top_stdout or "")
 
     -- Normalize file paths in the cache list by resolving symlinks
     -- This ensures consistency when matching buffer paths
@@ -79,9 +81,9 @@ local function do_load(path)
     -- cache.set MUST happen before on_load callback
     cache.set({
       profile_path = path,
-      list         = normalized_list,
-      top          = parsed_top,
-      total_str    = parsed_list.total_str,
+      list = normalized_list,
+      top = parsed_top,
+      total_str = parsed_list.total_str,
       profile_type = parsed_list.profile_type or "",
     })
 
@@ -101,13 +103,13 @@ local function do_load(path)
   end
 
   pprof.run_list(path, function(err, stdout)
-    list_err    = err
+    list_err = err
     list_stdout = stdout
     on_both_done()
   end)
 
   pprof.run_top(path, config.opts.top.default_count, function(err, stdout)
-    top_err    = err
+    top_err = err
     top_stdout = stdout
     on_both_done()
   end)
@@ -115,18 +117,26 @@ end
 
 --- Register the BufReadPost autocmd for auto-applying signs/hints.
 local function register_autocmds()
-  if _autocmd_registered then return end
+  if _autocmd_registered then
+    return
+  end
   _autocmd_registered = true
 
   vim.api.nvim_create_autocmd("BufReadPost", {
     group = vim.api.nvim_create_augroup("pprof_bufread", { clear = true }),
     callback = function(ev)
-      if not cache.is_loaded() then return end
+      if not cache.is_loaded() then
+        return
+      end
       local filepath = vim.api.nvim_buf_get_name(ev.buf)
-      if filepath == "" then return end
+      if filepath == "" then
+        return
+      end
       -- Normalize to absolute path and resolve symlinks to match cache keys
       filepath = vim.fn.resolve(vim.fn.fnamemodify(filepath, ":p"))
-      if not cache.get_file(filepath) then return end
+      if not cache.get_file(filepath) then
+        return
+      end
       if signs_active() then
         signs.show(ev.buf)
       end
@@ -165,17 +175,25 @@ local function register_commands()
     end
   end
 
-  def("PProfSigns", action_cmd({
-    show = M.show_signs,
-    hide = M.hide_signs,
-    toggle = M.toggle_signs,
-  }), { nargs = "?", complete = action_complete })
+  def(
+    "PProfSigns",
+    action_cmd({
+      show = M.show_signs,
+      hide = M.hide_signs,
+      toggle = M.toggle_signs,
+    }),
+    { nargs = "?", complete = action_complete }
+  )
 
-  def("PProfHints", action_cmd({
-    show = M.show_hints,
-    hide = M.hide_hints,
-    toggle = M.toggle_hints,
-  }), { nargs = "?", complete = action_complete })
+  def(
+    "PProfHints",
+    action_cmd({
+      show = M.show_hints,
+      hide = M.hide_hints,
+      toggle = M.toggle_hints,
+    }),
+    { nargs = "?", complete = action_complete }
+  )
 
   def("PProfTop", function(a)
     local count = a.args ~= "" and tonumber(a.args) or nil
@@ -186,9 +204,15 @@ local function register_commands()
     M.peek(a.args ~= "" and a.args or nil)
   end, { nargs = "?" })
 
-  def("PProfQuickfix", function() M.quickfix() end, {})
-  def("PProfLoclist", function() M.loclist() end, {})
-  def("PProfClear", function() M.clear() end, {})
+  def("PProfQuickfix", function()
+    M.quickfix()
+  end, {})
+  def("PProfLoclist", function()
+    M.loclist()
+  end, {})
+  def("PProfClear", function()
+    M.clear()
+  end, {})
 end
 
 --- Configure nvim-pprof. Call this once during setup.
@@ -380,7 +404,6 @@ function M.peek(func_name)
     peek_win.show(parse.peek.parse(stdout))
   end)
 end
-
 
 --- Populate the quickfix list with one entry per profiled file.
 function M.quickfix()

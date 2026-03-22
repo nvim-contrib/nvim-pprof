@@ -34,7 +34,9 @@ M.populate = function()
   end
 
   -- Sort by flat descending (hottest first)
-  table.sort(all_items, function(a, b) return a.flat > b.flat end)
+  table.sort(all_items, function(a, b)
+    return a.flat > b.flat
+  end)
 
   -- Build loclist items
   local loclist_items = {}

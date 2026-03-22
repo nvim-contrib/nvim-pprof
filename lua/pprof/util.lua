@@ -42,7 +42,7 @@ function M.parse_value(str)
   elseif unit == "min" then
     return num * 60
 
-  -- Memory units -> bytes
+    -- Memory units -> bytes
   elseif unit == "B" then
     return num
   elseif unit == "kB" or unit == "KB" then
@@ -54,7 +54,7 @@ function M.parse_value(str)
   elseif unit == "TB" then
     return num * 1024 * 1024 * 1024 * 1024
 
-  -- Dimensionless
+    -- Dimensionless
   elseif unit == "samples" or unit == "count" or unit == "" then
     return num
   end

@@ -13,7 +13,9 @@
 --- @type fun(client: table): table
 local consumer = function(client)
   client.listeners.results = function(_, _, partial)
-    if partial then return end
+    if partial then
+      return
+    end
     vim.schedule(function()
       require("pprof").load()
     end)

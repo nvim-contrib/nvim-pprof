@@ -24,12 +24,13 @@
 ---
 --- @type fun(client: table): table
 local consumer = function(client)
-
   --- Search neotest result output directories for a profile file.
   --- @param results table<string, table>
   --- @return string|nil  absolute path to the first profile file found
   local function find_in_results(results)
-    if not results then return nil end
+    if not results then
+      return nil
+    end
     local patterns = require("pprof.config").opts.file or { "cpu.prof", "mem.prof", "*.prof", "*.pprof" }
     for _, result in pairs(results) do
       if result.output then
@@ -46,7 +47,9 @@ local consumer = function(client)
   end
 
   client.listeners.results = function(_, results, partial)
-    if partial then return end
+    if partial then
+      return
+    end
     vim.schedule(function()
       local path = find_in_results(results)
       if path then

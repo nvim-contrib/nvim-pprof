@@ -1,7 +1,7 @@
 local M = {}
 
 local cache = require("pprof.cache")
-local util  = require("pprof.util")
+local util = require("pprof.util")
 
 --- Populate the quickfix list with one entry per profiled file.
 M.populate = function()
@@ -36,9 +36,9 @@ M.populate = function()
     if total_flat > 0 or total_cum > 0 then
       rows[#rows + 1] = {
         filename = filepath,
-        lnum     = hot_lnum,
-        flat     = total_flat,
-        cum      = total_cum,
+        lnum = hot_lnum,
+        flat = total_flat,
+        cum = total_cum,
       }
     end
   end
@@ -48,7 +48,9 @@ M.populate = function()
     return
   end
 
-  table.sort(rows, function(a, b) return a.flat > b.flat end)
+  table.sort(rows, function(a, b)
+    return a.flat > b.flat
+  end)
 
   -- Detect the unit from total_str for consistent formatting
   local unit = (profile.total_str or ""):match("[%a]+$") or ""
@@ -59,9 +61,9 @@ M.populate = function()
     local cum_str = util.format_value(row.cum, unit)
     items[#items + 1] = {
       filename = row.filename,
-      lnum     = row.lnum,
-      col      = 0,
-      text     = flat_str .. " flat | " .. cum_str .. " cum",
+      lnum = row.lnum,
+      col = 0,
+      text = flat_str .. " flat | " .. cum_str .. " cum",
     }
   end
 
