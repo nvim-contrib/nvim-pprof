@@ -6,6 +6,7 @@ nvim-pprof provides Go pprof profiler integration directly inside Neovim.
   1. Setup...................................................|nvim-pprof-setup|
   2. Commands.............................................|nvim-pprof-commands|
   3. Lua API..............................................|nvim-pprof-lua-api|
+  4. Neotest.............................................|nvim-pprof-neotest|
 
 ================================================================================
 SETUP                                                       *nvim-pprof-setup*
@@ -381,6 +382,51 @@ pprof.jump_prev()
 pprof.clear()
     Remove signs, clear the cached profile, stop the file watcher, and
     disable hints.
+
+
+================================================================================
+NEOTEST                                                    *nvim-pprof-neotest*
+
+nvim-pprof ships two neotest consumers that auto-reload the profile after
+every test run.
+
+                                                         *pprof.neotest*
+require("pprof.neotest")
+    Generic consumer. After each completed test run, auto-discovers a profile
+    file in cwd using the configured |pprof-config-file| patterns and loads
+    it. Suitable for any language or test runner that writes a profile to a
+    known location in the project root.
+
+    Usage: >
+
+    require("neotest").setup({
+      consumers = {
+        pprof = require("pprof.neotest"),
+      },
+    })
+<
+
+                                                         *pprof.neotest.go*
+require("pprof.neotest.go")
+    Go-specific consumer. After each completed test run, searches the neotest
+    output directories for profile files matching the configured |pprof-config-file|
+    patterns. If found, the profile is loaded directly. If not found, falls
+    back to cwd auto-discovery.
+
+    Expects neotest-go (or neotest-golang) to be configured with a profiling
+    flag: >
+
+    require("neotest").setup({
+      adapters = {
+        require("neotest-go")({
+          args = { "-cpuprofile", "cpu.prof" },
+        }),
+      },
+      consumers = {
+        pprof = require("pprof.neotest.go"),
+      },
+    })
+<
 
 
  vim:tw=78:ts=8:ft=help:norl:

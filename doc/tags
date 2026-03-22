@@ -9,6 +9,7 @@
 nvim-pprof	nvim-pprof.txt	/*nvim-pprof*
 nvim-pprof-commands	nvim-pprof.txt	/*nvim-pprof-commands*
 nvim-pprof-lua-api	nvim-pprof.txt	/*nvim-pprof-lua-api*
+nvim-pprof-neotest	nvim-pprof.txt	/*nvim-pprof-neotest*
 nvim-pprof-setup	nvim-pprof.txt	/*nvim-pprof-setup*
 pprof.clear()	nvim-pprof.txt	/*pprof.clear()*
 pprof.hide_hints()	nvim-pprof.txt	/*pprof.hide_hints()*

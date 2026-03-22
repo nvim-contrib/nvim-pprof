@@ -245,6 +245,42 @@ vim.keymap.set("n", "<leader>pp", "<cmd>PProfPeek<CR>",
 
 ![peek](doc/tapes/output/peek.png)
 
+## Neotest integration
+
+nvim-pprof ships two neotest consumers that auto-reload the profile after
+every test run.
+
+### Generic consumer
+
+Auto-discovers a profile in cwd after every run using the configured `file`
+patterns:
+
+```lua
+require("neotest").setup({
+  consumers = {
+    pprof = require("pprof.neotest"),
+  },
+})
+```
+
+### Go consumer
+
+Searches the neotest output directories for profile files first, then falls
+back to cwd. Configure neotest-go to emit a profile:
+
+```lua
+require("neotest").setup({
+  adapters = {
+    require("neotest-go")({
+      args = { "-cpuprofile", "cpu.prof" },
+    }),
+  },
+  consumers = {
+    pprof = require("pprof.neotest.go"),
+  },
+})
+```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or pull request on
