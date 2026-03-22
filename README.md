@@ -113,6 +113,7 @@ require("pprof").setup({
     border        = "rounded",
     width         = 0.70,  -- fraction of editor columns
     height        = 0.50,  -- fraction of editor lines
+    min_flat_pct  = 5.0,   -- threshold: flat% >= this gets `fail` colour; 0 disables
     window        = {},    -- extra options passed to nvim_open_win
     highlights = {
       header        = { link = "Title" },
@@ -120,6 +121,8 @@ require("pprof").setup({
       border        = { link = "FloatBorder" },
       normal        = { link = "NormalFloat" },
       cursor_line   = { link = "CursorLine" },
+      pass          = { link = "Comment" },       -- flat% below threshold
+      fail          = { link = "DiagnosticWarn" }, -- flat% at or above threshold
     },
   },
 

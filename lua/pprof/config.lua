@@ -8,6 +8,8 @@
 --- @field border table
 --- @field normal table
 --- @field cursor_line table
+--- @field pass table
+--- @field fail table
 
 --- @class SignStateOpts
 --- @field hl string  highlight group name
@@ -39,6 +41,7 @@
 --- @field border string
 --- @field width number  fraction of editor columns (0 = auto-size to content)
 --- @field height number  fraction of editor lines (0 = auto-size to content)
+--- @field min_flat_pct number  threshold: flat% >= this gets `fail` colour; 0 disables
 --- @field window table
 --- @field highlights WindowHighlightsOpts
 
@@ -95,16 +98,19 @@ local defaults = {
   },
   top = {
     default_count = 20,
-    border  = "rounded",
-    width   = 0.70,
-    height  = 0.50,
-    window  = {},
+    border        = "rounded",
+    width         = 0.70,
+    height        = 0.50,
+    min_flat_pct  = 5.0,
+    window        = {},
     highlights = {
       header        = { link = "Title" },
       column_header = { link = "Comment" },
       border        = { link = "FloatBorder" },
       normal        = { link = "NormalFloat" },
       cursor_line   = { link = "CursorLine" },
+      pass          = { link = "Comment" },
+      fail          = { link = "DiagnosticWarn" },
     },
   },
   peek = {

@@ -17,31 +17,31 @@ local COLHDR_HL = "PprofTopColHeader"
 --- Define highlight groups for the top window from config.
 local function setup_highlights()
   local top_hl = (config.opts.top and config.opts.top.highlights) or {}
-  vim.api.nvim_set_hl(0, HEADER_HL,          top_hl.header        or { link = "Title" })
-  vim.api.nvim_set_hl(0, COLHDR_HL,          top_hl.column_header or { link = "Comment" })
-  vim.api.nvim_set_hl(0, "PprofTopBorder",     top_hl.border      or { link = "FloatBorder" })
-  vim.api.nvim_set_hl(0, "PprofTopNormal",     top_hl.normal      or { link = "NormalFloat" })
-  vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line or { link = "CursorLine" })
+  vim.api.nvim_set_hl(0, HEADER_HL,            top_hl.header        or { link = "Title" })
+  vim.api.nvim_set_hl(0, COLHDR_HL,            top_hl.column_header or { link = "Comment" })
+  vim.api.nvim_set_hl(0, "PprofTopBorder",     top_hl.border        or { link = "FloatBorder" })
+  vim.api.nvim_set_hl(0, "PprofTopNormal",     top_hl.normal        or { link = "NormalFloat" })
+  vim.api.nvim_set_hl(0, "PprofTopCursorLine", top_hl.cursor_line   or { link = "CursorLine" })
+  vim.api.nvim_set_hl(0, "PprofTopPass",       top_hl.pass          or { link = "Comment" })
+  vim.api.nvim_set_hl(0, "PprofTopFail",       top_hl.fail          or { link = "DiagnosticWarn" })
 end
 
---- Apply per-row heat highlights to data rows in the top buffer.
---- Rows are coloured using PprofHeat* groups, normalised against the
---- highest flat_pct in the current entry list.
+--- Returns the highlight group for the flat% column based on min_flat_pct threshold.
+--- Returns nil when threshold is 0 (disabled).
+--- @param flat_pct number
+--- @return string|nil
+local function get_flat_hl_group(flat_pct)
+  local min_pct = (config.opts.top and config.opts.top.min_flat_pct) or 5.0
+  if min_pct == 0 then return nil end
+  return flat_pct >= min_pct and "PprofTopFail" or "PprofTopPass"
+end
+
+--- Apply a list of highlights to a buffer.
 --- @param bufnr integer
---- @param entries TopEntry[]
-local function apply_row_highlights(bufnr, entries)
-  local levels = (config.opts.signs and config.opts.signs.heat_levels) or 5
-
-  local max_pct = 0
-  for _, entry in ipairs(entries) do
-    if entry.flat_pct > max_pct then max_pct = entry.flat_pct end
-  end
-
-  -- Data rows start at line index 3 (0-based): title(0), colhdr(1), sep(2), data(3+)
-  for i, entry in ipairs(entries) do
-    local heat  = max_pct > 0 and (entry.flat_pct / max_pct) or 0
-    local level = util.heat_to_level(heat, levels)
-    vim.api.nvim_buf_add_highlight(bufnr, -1, "PprofHeat" .. level, i + 2, 0, -1)
+--- @param highlights {hl_group:string, line:integer, col_start:integer, col_end:integer}[]
+local function apply_highlights(bufnr, highlights)
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(bufnr, -1, hl.hl_group, hl.line, hl.col_start, hl.col_end)
   end
 end
 
@@ -61,10 +61,10 @@ local function format_row(entry, name_w)
   )
 end
 
---- Build display lines from entries.
+--- Build display lines and highlights from entries.
 --- @param entries TopEntry[]
 --- @param total_str string
---- @return string[]
+--- @return string[], {hl_group:string, line:integer, col_start:integer, col_end:integer}[]
 local function build_lines(entries, total_str)
   local name_w = #"function"
   for _, entry in ipairs(entries) do
@@ -73,17 +73,48 @@ local function build_lines(entries, total_str)
     end
   end
 
-  local lines = {}
+  local levels  = (config.opts.signs and config.opts.signs.heat_levels) or 5
+  local max_pct = 0
+  for _, entry in ipairs(entries) do
+    if entry.flat_pct > max_pct then max_pct = entry.flat_pct end
+  end
+
+  -- flat% column byte offset: 2 indent + name_w + 2 sep + 8 flat_str + 2 sep = name_w+14
+  -- flat% column byte width:  "%6.2f%%" renders to 7 chars (e.g. " 14.89%")
+  local flat_col     = name_w + 14
+  local flat_col_end = flat_col + 7
+
+  local lines      = {}
+  local highlights = {}
+
   lines[#lines + 1] = string.format("Top Functions (total: %s)", total_str)
+  table.insert(highlights, { hl_group = HEADER_HL, line = 0, col_start = 0, col_end = -1 })
+
   lines[#lines + 1] = string.format(
     "  %-" .. name_w .. "s  %8s  %6s   %6s   %8s  %6s",
     "function", "flat", "flat%", "sum%", "cum", "cum%"
   )
+  table.insert(highlights, { hl_group = COLHDR_HL, line = 1, col_start = 0, col_end = -1 })
+
   lines[#lines + 1] = string.rep("─", vim.fn.strdisplaywidth(lines[2]))
-  for _, entry in ipairs(entries) do
+
+  for i, entry in ipairs(entries) do
+    local row = i + 2  -- 0-based: title(0), colhdr(1), sep(2), data(3+)
     lines[#lines + 1] = format_row(entry, name_w)
+
+    -- Whole-row heat gradient, normalised against the hottest entry
+    local heat  = max_pct > 0 and (entry.flat_pct / max_pct) or 0
+    local level = util.heat_to_level(heat, levels)
+    table.insert(highlights, { hl_group = "PprofHeat" .. level, line = row, col_start = 0, col_end = -1 })
+
+    -- flat% column: pass/fail based on min_flat_pct threshold
+    local col_hl = get_flat_hl_group(entry.flat_pct)
+    if col_hl then
+      table.insert(highlights, { hl_group = col_hl, line = row, col_start = flat_col, col_end = flat_col_end })
+    end
   end
-  return lines
+
+  return lines, highlights
 end
 
 --- Compute float window dimensions and position.
@@ -190,16 +221,13 @@ local function redraw(entries)
     return
   end
   _state.entries = entries
-  local lines = build_lines(entries, _state.total_str)
+  local lines, highlights = build_lines(entries, _state.total_str)
 
   vim.bo[_state.bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(_state.bufnr, 0, -1, false, lines)
   vim.bo[_state.bufnr].modifiable = false
 
-  -- Reapply highlights
-  vim.api.nvim_buf_add_highlight(_state.bufnr, -1, HEADER_HL, 0, 0, -1)
-  vim.api.nvim_buf_add_highlight(_state.bufnr, -1, COLHDR_HL, 1, 0, -1)
-  apply_row_highlights(_state.bufnr, entries)
+  apply_highlights(_state.bufnr, highlights)
 
   -- Resize window to fit new content if still valid
   if _state.win and vim.api.nvim_win_is_valid(_state.win) then
@@ -225,7 +253,7 @@ function M.show(entries, total_str)
   _state.total_str = total_str
   _state.entries = entries
 
-  local lines = build_lines(entries, total_str)
+  local lines, highlights = build_lines(entries, total_str)
 
   -- Create scratch buffer
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -237,10 +265,7 @@ function M.show(entries, total_str)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.bo[bufnr].modifiable = false
 
-  -- Highlight header rows and data rows
-  vim.api.nvim_buf_add_highlight(bufnr, -1, HEADER_HL, 0, 0, -1)
-  vim.api.nvim_buf_add_highlight(bufnr, -1, COLHDR_HL, 1, 0, -1)
-  apply_row_highlights(bufnr, entries)
+  apply_highlights(bufnr, highlights)
 
   -- Open float
   local cfg = float_config(lines)
