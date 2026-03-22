@@ -17,7 +17,7 @@ pprof.setup({opts})
     Usage: >
 
     require('pprof').setup({
-      hints = { enabled = true },
+      line_hints = { enabled = true },
     })
 <
 
@@ -57,14 +57,29 @@ Valid keys for {opts}:
         })
 <
 
-    signs.heat_levels: ~
-        Integer >= 1. Number of discrete heat gradient levels used for
-        sign highlighting.
-        Defaults to: `5`
+    signs.cold: ~
+        Table `{ hl, text }`. Highlight group name and sign glyph for the
+        coldest (lowest-heat) lines.
+        Defaults to: `{ hl = "PprofHeatCold", text = "▎" }`
 
-    signs.priority: ~
-        Integer. Sign priority. See |sign-priority|.
-        Defaults to: `10`
+    signs.warm: ~
+        Table `{ hl, text }`. Highlight group name and sign glyph for
+        mid-range heat lines.
+        Defaults to: `{ hl = "PprofHeatWarm", text = "▎" }`
+
+    signs.hot: ~
+        Table `{ hl, text }`. Highlight group name and sign glyph for the
+        hottest lines.
+        Defaults to: `{ hl = "PprofHeatHot", text = "▎" }`
+
+    signs.group: ~
+        String. Sign group name. See |sign-group|.
+        Defaults to: `"pprof"`
+
+    signs.heat_levels: ~
+        Integer >= 1. Number of discrete heat gradient steps between cold
+        and hot.
+        Defaults to: `5`
 
     signs.signhl: ~
         Boolean. When true, show the glyph in the sign column.
@@ -81,19 +96,129 @@ Valid keys for {opts}:
         gradient. Can be toggled at runtime with |pprof.toggle_linehl()|.
         Defaults to: `false`
 
-    hints.enabled: ~
+    highlights.cold: ~
+        Table `{ fg, bg }`. Foreground and background colors for the cold
+        end of the heat gradient.
+        Defaults to: `{ fg = "#3b82f6", bg = "#1e3a5f" }`
+
+    highlights.warm: ~
+        Table `{ fg, bg }`. Foreground and background colors for the
+        mid-range of the heat gradient.
+        Defaults to: `{ fg = "#f59e0b", bg = "#7a4f05" }`
+
+    highlights.hot: ~
+        Table `{ fg, bg }`. Foreground and background colors for the hot
+        end of the heat gradient.
+        Defaults to: `{ fg = "#ef4444", bg = "#7f1d1d" }`
+
+    line_hints.enabled: ~
         Boolean. When true, inline hints are shown automatically after a
         profile is loaded.
         Defaults to: `false`
 
-    hints.format: ~
+    line_hints.format: ~
         String. Template for inline hint text. Use `{flat}` and `{cum}`
-        as placeholders for flat and cumulative values.
+        as placeholders.
         Defaults to: `"{flat} flat | {cum} cum"`
+
+    line_hints.position: ~
+        String. Where to place the virtual text relative to the line.
+        One of `"eol"`, `"right_align"`, or `"inline"`.
+        See |nvim_buf_set_extmark()|.
+        Defaults to: `"eol"`
+
+    line_hints.highlight: ~
+        Highlight definition table applied to hint text.
+        Defaults to: `{ link = "Comment" }`
 
     top.default_count: ~
         Integer. Default number of top functions shown by |:PProfTop|.
         Defaults to: `20`
+
+    top.border: ~
+        String. Border style for the top floating window.
+        Defaults to: `"rounded"`
+
+    top.width: ~
+        Number. Width of the float as a fraction of editor columns (e.g.
+        `0.70` = 70 %).
+        Defaults to: `0.70`
+
+    top.height: ~
+        Number. Height of the float as a fraction of editor lines (e.g.
+        `0.50` = 50 %).
+        Defaults to: `0.50`
+
+    top.min_flat_pct: ~
+        Number. Pass/fail threshold for the flat% column. Functions with
+        flat% at or above this value are highlighted with
+        `top.highlights.fail`; those below use `top.highlights.pass`.
+        Set to `0` to disable.
+        Defaults to: `5.0`
+
+    top.window: ~
+        Table. Extra options merged into the |nvim_open_win()| call.
+        Defaults to: `{}`
+
+    top.highlights.header: ~
+        Highlight for the title line.
+        Defaults to: `{ link = "Title" }`
+
+    top.highlights.column_header: ~
+        Highlight for the column labels line.
+        Defaults to: `{ link = "Comment" }`
+
+    top.highlights.border: ~
+        Highlight for the float border.
+        Defaults to: `{ link = "FloatBorder" }`
+
+    top.highlights.normal: ~
+        Highlight for the float body background.
+        Defaults to: `{ link = "NormalFloat" }`
+
+    top.highlights.cursor_line: ~
+        Highlight for the cursor line inside the float.
+        Defaults to: `{ link = "CursorLine" }`
+
+    top.highlights.pass: ~
+        Highlight for the flat% column when below `min_flat_pct`.
+        Defaults to: `{ link = "Comment" }`
+
+    top.highlights.fail: ~
+        Highlight for the flat% column when at or above `min_flat_pct`.
+        Defaults to: `{ link = "DiagnosticWarn" }`
+
+    peek.border: ~
+        String. Border style for the peek floating window.
+        Defaults to: `"rounded"`
+
+    peek.width: ~
+        Number. Width fraction. `0` auto-sizes to content.
+        Defaults to: `0`
+
+    peek.height: ~
+        Number. Height fraction. `0` auto-sizes to content.
+        Defaults to: `0`
+
+    peek.window: ~
+        Table. Extra options merged into the |nvim_open_win()| call.
+        Defaults to: `{}`
+
+    peek.highlights.header: ~
+        Highlight for the title line.
+        Defaults to: `{ link = "Title" }`
+
+    peek.highlights.border: ~
+        Highlight for the float border.
+        Defaults to: `{ link = "FloatBorder" }`
+
+    peek.highlights.normal: ~
+        Highlight for the float body background.
+        Defaults to: `{ link = "NormalFloat" }`
+
+    peek.highlights.cursor_line: ~
+        Highlight for the cursor line inside the float.
+        Defaults to: `{ link = "CursorLine" }`
 
 ================================================================================
 COMMANDS                                                 *nvim-pprof-commands*
@@ -115,8 +240,11 @@ COMMANDS                                                 *nvim-pprof-commands*
     Requires a prior |:PProfLoad|.
 
 :PProfTop [{count}]                                              *:PProfTop*
-    Open a floating window with the top hottest functions. {count} overrides
-    the `top.default_count` config option. Requires a prior |:PProfLoad|.
+    Open a floating window with the top hottest functions. The title shows
+    the detected profile type (e.g. `[cpu]`, `[heap]`). Each row includes a
+    10-character sparkline bar (█░) proportional to relative hotness and a
+    pass/fail-coloured flat% column. {count} overrides the
+    `top.default_count` config option. Requires a prior |:PProfLoad|.
 
 :PProfPeek [{func}]                                             *:PProfPeek*
     Open a floating window showing callers and callees of {func}. If {func}
@@ -211,8 +339,10 @@ pprof.toggle_hints()
 
                                                                 *pprof.top()*
 pprof.top({count})
-    Open a floating window with the top hottest functions. {count} overrides
-    the `top.default_count` config option.
+    Open a floating window with the top hottest functions. The title shows
+    the detected profile type (cpu, heap, alloc, etc.) and total sample
+    count. Each row includes a sparkline bar and pass/fail-coloured flat%
+    column. {count} overrides the `top.default_count` config option.
 
                                                                *pprof.peek()*
 pprof.peek({func_name})

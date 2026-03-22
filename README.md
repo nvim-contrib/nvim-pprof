@@ -12,7 +12,7 @@
 - Load and parse Go pprof profiles (CPU, memory, allocations)
 - Heat-gradient signs in the sign column and line numbers showing hot/cold lines
 - Inline virtual text hints showing flat/cum values per line
-- Floating top-N function summary window with sort-by-flat/cum
+- Floating top-N function summary with profile type label, sparkline bar, and pass/fail threshold coloring
 - Peek window showing callers/callees for any function
 - Location list populated with all profiled hotspot lines
 - File watcher for auto-reload when profiles change on disk
@@ -202,12 +202,16 @@ pprof.clear()
 
 ### Top window keys
 
-| Key         | Action         |
-| ----------- | -------------- |
-| `sf`        | Sort by flat   |
-| `sc`        | Sort by cum    |
-| `Enter`     | Jump to source |
-| `q` / `Esc` | Close          |
+| Key         | Action                                    |
+| ----------- | ----------------------------------------- |
+| `sf`        | Sort by flat                              |
+| `sc`        | Sort by cum                               |
+| `Enter`     | Jump to source for function under cursor  |
+| `q` / `Esc` | Close                                     |
+
+The window title shows the detected profile type (e.g. `[cpu]`, `[heap]`).
+Each row includes a 10-character sparkline bar (█░) normalised to the hottest
+entry, and the flat% column is coloured pass/fail against `top.min_flat_pct`.
 
 ![top](doc/tapes/output/top.webp)
 
