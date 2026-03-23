@@ -215,13 +215,13 @@ local function register_commands()
     M.clear()
   end, {})
 
-  def("PProfBrowser", function(a)
+  def("PProfServerStart", function(a)
     local port = a.args ~= "" and tonumber(a.args) or nil
-    M.browser(port)
+    M.start_server(port)
   end, { nargs = "?" })
 
-  def("PProfBrowserStop", function()
-    M.browser_stop()
+  def("PProfServerStop", function()
+    M.stop_server()
   end, {})
 end
 
@@ -435,20 +435,20 @@ function M.jump_prev()
   signs.jump(-1)
 end
 
---- Open pprof's built-in web UI in the system browser.
+--- Start the pprof web server and optionally open the system browser.
 --- @param port integer|nil  HTTP port (defaults to config.browser.port)
-function M.browser(port)
+function M.start_server(port)
   if not cache.is_loaded() then
     vim.notify("pprof: Profile not loaded.", vim.log.levels.WARN)
     return
   end
 
   local data = cache.get()
-  browser.start(data.profile_path, port or config.opts.browser.port)
+  browser.start(data.profile_path, port or config.opts.browser.port, config.opts.browser.open)
 end
 
---- Stop the running pprof browser server.
-function M.browser_stop()
+--- Stop the running pprof web server.
+function M.stop_server()
   browser.stop()
 end
 

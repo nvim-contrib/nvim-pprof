@@ -275,15 +275,16 @@ COMMANDS                                                 *nvim-pprof-commands*
     Remove signs, clear the cached profile, stop the file watcher, and
     disable hints.
 
-:PProfBrowser [{port}]                                      *:PProfBrowser*
+:PProfServerStart [{port}]                              *:PProfServerStart*
     Start pprof's built-in interactive web server (`go tool pprof -http
-    :PORT`) and open `http://localhost:PORT` in the system browser. The web
-    UI includes a flamegraph, call graph, tree view, and source view.
-    {port} overrides the `browser.port` config option (default: 8080).
+    :PORT`). When `browser.open` is true (the default), also opens
+    `http://localhost:PORT` in the system browser. The web UI includes a
+    flamegraph, call graph, tree view, and source view. {port} overrides
+    the `browser.port` config option (default: 8080).
     Requires a prior |:PProfLoad|.
 
-:PProfBrowserStop                                        *:PProfBrowserStop*
-    Stop the pprof web server started by |:PProfBrowser|.
+:PProfServerStop                                          *:PProfServerStop*
+    Stop the pprof web server started by |:PProfServerStart|.
 
 
 ================================================================================
@@ -388,15 +389,16 @@ pprof.jump_next()
 pprof.jump_prev()
     Jump to the previous hotspot sign in the current buffer.
 
-                                                            *pprof.browser()*
-pprof.browser({port})
-    Start pprof's built-in interactive web server and open the system
-    browser at `http://localhost:PORT`. {port} overrides `browser.port`
-    (default: 8080). Requires a loaded profile.
+                                                        *pprof.start_server()*
+pprof.start_server({port})
+    Start pprof's built-in interactive web server. When `browser.open` is
+    true (the default), also opens `http://localhost:PORT` in the system
+    browser. {port} overrides `browser.port` (default: 8080). Requires a
+    loaded profile.
 
-                                                       *pprof.browser_stop()*
-pprof.browser_stop()
-    Stop the pprof web server started by |pprof.browser()|.
+                                                         *pprof.stop_server()*
+pprof.stop_server()
+    Stop the pprof web server started by |pprof.start_server()|.
 
                                                               *pprof.clear()*
 pprof.clear()

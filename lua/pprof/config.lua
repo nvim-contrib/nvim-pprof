@@ -58,6 +58,7 @@
 
 --- @class BrowserOpts
 --- @field port integer  default HTTP port for the pprof web server
+--- @field open boolean  when true, open the system browser after the server starts
 
 --- @class Configuration
 --- @field pprof_bin string
@@ -142,6 +143,7 @@ local defaults = {
   },
   browser = {
     port = 8080,
+    open = true,
   },
   on_load = nil,
 }

@@ -19,6 +19,7 @@ describe("config.setup()", function()
     assert.equals(20, config.opts.top.default_count)
     assert.is_true(config.opts.commands)
     assert.equals(8080, config.opts.browser.port)
+    assert.is_true(config.opts.browser.open)
   end)
 
   it("merges user options over defaults", function()

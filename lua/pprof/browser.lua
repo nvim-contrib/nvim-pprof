@@ -3,10 +3,11 @@ local M = {}
 local _job_id = nil
 local _current_port = nil
 
---- Start the pprof HTTP server and open the browser.
+--- Start the pprof HTTP server and optionally open the browser.
 --- @param profile_path string  absolute path to the profile file
 --- @param port integer  HTTP port to listen on
-function M.start(profile_path, port)
+--- @param open_browser boolean  when true, open the system browser after startup
+function M.start(profile_path, port, open_browser)
   if M.is_running() then
     vim.notify(
       "pprof: server already running at http://localhost:" .. _current_port,
@@ -49,13 +50,15 @@ function M.start(profile_path, port)
 
   vim.notify("pprof: server starting at http://localhost:" .. port, vim.log.levels.INFO)
 
-  vim.defer_fn(function()
-    if not M.is_running() then
-      return
-    end
-    local opener = vim.fn.has("mac") == 1 and "open" or "xdg-open"
-    vim.fn.jobstart({ opener, "http://localhost:" .. port })
-  end, 800)
+  if open_browser then
+    vim.defer_fn(function()
+      if not M.is_running() then
+        return
+      end
+      local opener = vim.fn.has("mac") == 1 and "open" or "xdg-open"
+      vim.fn.jobstart({ opener, "http://localhost:" .. port })
+    end, 800)
+  end
 end
 
 --- Stop the running pprof HTTP server.

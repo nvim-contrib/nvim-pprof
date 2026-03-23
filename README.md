@@ -153,8 +153,8 @@ require("pprof").setup({
 | `:PProfPeek [func]`    | Show callers/callees. No argument uses treesitter to detect the function at cursor                   |
 | `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                              |
 | `:PProfLoclist`        | Populate location list with hotspot lines                                                            |
-| `:PProfBrowser [port]` | Start pprof web UI and open browser at `http://localhost:PORT` (default port: 8080)                  |
-| `:PProfBrowserStop`    | Stop the pprof web server                                                                            |
+| `:PProfServerStart [port]` | Start pprof web server; opens browser at `http://localhost:PORT` when `browser.open` is true (default port: 8080) |
+| `:PProfServerStop`     | Stop the pprof web server                                                                            |
 | `:PProfClear`          | Clear all profile data, signs, hints, and floats                                                     |
 
 ![hints](doc/tapes/output/hints.webp)
@@ -196,10 +196,10 @@ pprof.loclist()
 pprof.jump_next()
 pprof.jump_prev()
 
--- browser (pprof web UI)
-pprof.browser()          -- open at default port (config.browser.port = 8080)
-pprof.browser(9090)      -- open at custom port
-pprof.browser_stop()     -- stop the server
+-- pprof web server
+pprof.start_server()         -- start at default port; opens browser when browser.open = true
+pprof.start_server(9090)     -- start at custom port
+pprof.stop_server()          -- stop the server
 
 -- clear
 pprof.clear()
