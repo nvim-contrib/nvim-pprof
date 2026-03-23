@@ -22,6 +22,12 @@ describe("config.setup()", function()
     assert.is_true(config.opts.browser.open)
   end)
 
+  it("allows overriding browser config", function()
+    config.setup({ browser = { port = 9090, open = false } })
+    assert.equals(9090, config.opts.browser.port)
+    assert.is_false(config.opts.browser.open)
+  end)
+
   it("merges user options over defaults", function()
     config.setup({ pprof_bin = "/usr/bin/pprof" })
     assert.equals("/usr/bin/pprof", config.opts.pprof_bin)

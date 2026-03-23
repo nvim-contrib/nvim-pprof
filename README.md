@@ -80,6 +80,11 @@ require("pprof").setup({
     timeout_ms = 500,   -- debounce delay before reloading
   },
 
+  browser = {
+    port = 8080,  -- HTTP port for the pprof web server (:PProfServerStart)
+    open = true,  -- open the system browser automatically on start; set false for headless
+  },
+
   -- called after a profile is loaded
   on_load = nil,
 

@@ -56,6 +56,20 @@ Valid keys for {opts}:
             Debounce delay in milliseconds before reloading after a change.
             Defaults to: `500`
 
+    browser: ~
+        Table controlling the pprof web server started by
+        |:PProfServerStart|.
+
+        browser.port: ~
+            Integer. HTTP port the pprof web server listens on.
+            Defaults to: `8080`
+
+        browser.open: ~
+            Boolean. When true, the system browser is opened automatically
+            after the server starts. Set to false for headless use (e.g.
+            remote machines, CI).
+            Defaults to: `true`
+
     on_load: ~
         A Lua function called after a profile is loaded.
         Example: >
