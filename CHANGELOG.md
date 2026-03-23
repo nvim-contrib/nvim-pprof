@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/nvim-contrib/nvim-pprof/compare/v0.3.0...v0.4.0) (2026-03-23)
+
+
+### Features
+
+* add PProfBrowser and PProfBrowserStop commands ([261e2d7](https://github.com/nvim-contrib/nvim-pprof/commit/261e2d7c4a199373185d51480bab5c6d6c50872c))
+* PProfServerStart auto-loads profile if not already cached ([078014c](https://github.com/nvim-contrib/nvim-pprof/commit/078014cd4a33c44a91e0b4f83066405f12cdc731))
+
 ## [0.3.0](https://github.com/nvim-contrib/nvim-pprof/compare/v0.2.0...v0.3.0) (2026-03-22)
 
 
