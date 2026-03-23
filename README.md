@@ -154,6 +154,8 @@ require("pprof").setup({
 | `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                              |
 | `:PProfLoclist`        | Populate location list with hotspot lines                                                            |
 | `:PProfClear`          | Clear all profile data, signs, hints, and floats                                                     |
+| `:PProfBrowser [port]` | Start pprof web UI and open browser at `http://localhost:PORT` (default port: 8080)                  |
+| `:PProfBrowserStop`    | Stop the pprof web server                                                                            |
 
 ![hints](doc/tapes/output/hints.webp)
 
@@ -193,6 +195,11 @@ pprof.loclist()
 -- jump to next/previous hotspot sign
 pprof.jump_next()
 pprof.jump_prev()
+
+-- browser (pprof web UI)
+pprof.browser()          -- open at default port (config.browser.port = 8080)
+pprof.browser(9090)      -- open at custom port
+pprof.browser_stop()     -- stop the server
 
 -- clear
 pprof.clear()

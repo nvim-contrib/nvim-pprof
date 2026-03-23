@@ -13,6 +13,7 @@ local quickfix = require("pprof.quickfix")
 local highlight = require("pprof.highlight")
 local watch = require("pprof.watch")
 local ts = require("pprof.ts")
+local browser = require("pprof.browser")
 
 local _autocmd_registered = false
 
@@ -212,6 +213,15 @@ local function register_commands()
   end, {})
   def("PProfClear", function()
     M.clear()
+  end, {})
+
+  def("PProfBrowser", function(a)
+    local port = a.args ~= "" and tonumber(a.args) or nil
+    M.browser(port)
+  end, { nargs = "?" })
+
+  def("PProfBrowserStop", function()
+    M.browser_stop()
   end, {})
 end
 
@@ -423,6 +433,23 @@ end
 --- Jump to the previous hotspot sign in the current buffer.
 function M.jump_prev()
   signs.jump(-1)
+end
+
+--- Open pprof's built-in web UI in the system browser.
+--- @param port integer|nil  HTTP port (defaults to config.browser.port)
+function M.browser(port)
+  if not cache.is_loaded() then
+    vim.notify("pprof: Profile not loaded.", vim.log.levels.WARN)
+    return
+  end
+
+  local data = cache.get()
+  browser.start(data.profile_path, port or config.opts.browser.port)
+end
+
+--- Stop the running pprof browser server.
+function M.browser_stop()
+  browser.stop()
 end
 
 --- Clear all profile data: cache, signs, hints, floats, watcher.

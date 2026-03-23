@@ -18,6 +18,7 @@ describe("config.setup()", function()
     assert.is_false(config.opts.line_hints.enabled)
     assert.equals(20, config.opts.top.default_count)
     assert.is_true(config.opts.commands)
+    assert.equals(8080, config.opts.browser.port)
   end)
 
   it("merges user options over defaults", function()

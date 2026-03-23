@@ -56,6 +56,9 @@
 --- @field enabled boolean
 --- @field timeout_ms integer
 
+--- @class BrowserOpts
+--- @field port integer  default HTTP port for the pprof web server
+
 --- @class Configuration
 --- @field pprof_bin string
 --- @field commands boolean
@@ -66,6 +69,7 @@
 --- @field top TopOpts
 --- @field peek PeekOpts
 --- @field auto_reload AutoReloadOpts
+--- @field browser BrowserOpts
 --- @field on_load function|nil
 
 local M = {
@@ -135,6 +139,9 @@ local defaults = {
   auto_reload = {
     enabled = false,
     timeout_ms = 500,
+  },
+  browser = {
+    port = 8080,
   },
   on_load = nil,
 }
