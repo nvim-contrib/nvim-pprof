@@ -277,11 +277,13 @@ COMMANDS                                                 *nvim-pprof-commands*
 
 :PProfServerStart [{port}]                              *:PProfServerStart*
     Start pprof's built-in interactive web server (`go tool pprof -http
-    :PORT`). When `browser.open` is true (the default), also opens
+    :PORT`). If a profile is already loaded it is reused; otherwise
+    auto-discovers `.prof` files in cwd (showing a picker when multiple
+    are found) and loads it first — populating signs and hints just like
+    |:PProfLoad|. When `browser.open` is true (the default), also opens
     `http://localhost:PORT` in the system browser. The web UI includes a
     flamegraph, call graph, tree view, and source view. {port} overrides
     the `browser.port` config option (default: 8080).
-    Requires a prior |:PProfLoad|.
 
 :PProfServerStop                                          *:PProfServerStop*
     Stop the pprof web server started by |:PProfServerStart|.
@@ -391,10 +393,12 @@ pprof.jump_prev()
 
                                                         *pprof.start_server()*
 pprof.start_server({port})
-    Start pprof's built-in interactive web server. When `browser.open` is
-    true (the default), also opens `http://localhost:PORT` in the system
-    browser. {port} overrides `browser.port` (default: 8080). Requires a
-    loaded profile.
+    Start pprof's built-in interactive web server. If a profile is already
+    loaded it is reused; otherwise auto-discovers `.prof` files in cwd and
+    loads it first (showing a picker for multiple matches), populating
+    signs and hints as a side-effect. When `browser.open` is true (the
+    default), also opens `http://localhost:PORT` in the system browser.
+    {port} overrides `browser.port` (default: 8080).
 
                                                          *pprof.stop_server()*
 pprof.stop_server()

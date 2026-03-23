@@ -153,7 +153,7 @@ require("pprof").setup({
 | `:PProfPeek [func]`    | Show callers/callees. No argument uses treesitter to detect the function at cursor                   |
 | `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                              |
 | `:PProfLoclist`        | Populate location list with hotspot lines                                                            |
-| `:PProfServerStart [port]` | Start pprof web server; opens browser at `http://localhost:PORT` when `browser.open` is true (default port: 8080) |
+| `:PProfServerStart [port]` | Auto-load profile (or reuse cached), start pprof web server, open browser when `browser.open` is true (default port: 8080) |
 | `:PProfServerStop`     | Stop the pprof web server                                                                            |
 | `:PProfClear`          | Clear all profile data, signs, hints, and floats                                                     |
 

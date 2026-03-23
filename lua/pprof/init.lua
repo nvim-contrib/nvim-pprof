@@ -46,7 +46,8 @@ end
 
 --- Perform the actual async load of a profile file.
 --- @param path string  absolute path to .prof file
-local function do_load(path)
+--- @param on_done function|nil  optional callback invoked after the cache is populated
+local function do_load(path, on_done)
   local list_stdout = nil
   local top_stdout = nil
   local list_err = nil
@@ -94,6 +95,10 @@ local function do_load(path)
       watch.start(path, function()
         do_load(path)
       end)
+    end
+
+    if on_done then
+      on_done()
     end
 
     if config.opts.on_load then
@@ -436,15 +441,49 @@ function M.jump_prev()
 end
 
 --- Start the pprof web server and optionally open the system browser.
+--- If a profile is already loaded it is reused; otherwise auto-discovers
+--- .prof files in cwd (showing a picker when multiple are found).
 --- @param port integer|nil  HTTP port (defaults to config.browser.port)
 function M.start_server(port)
-  if not cache.is_loaded() then
-    vim.notify("pprof: Profile not loaded.", vim.log.levels.WARN)
+  local effective_port = port or config.opts.browser.port
+
+  local function launch()
+    browser.start(cache.get().profile_path, effective_port, config.opts.browser.open)
+  end
+
+  if cache.is_loaded() then
+    launch()
     return
   end
 
-  local data = cache.get()
-  browser.start(data.profile_path, port or config.opts.browser.port, config.opts.browser.open)
+  local patterns = config.opts.file or { "*.prof", "*.pprof" }
+  local cwd = vim.fn.getcwd()
+  local seen = {}
+  local prof_files = {}
+  for _, pat in ipairs(patterns) do
+    for _, f in ipairs(vim.fn.glob(cwd .. "/" .. pat, false, true)) do
+      if not seen[f] then
+        seen[f] = true
+        prof_files[#prof_files + 1] = f
+      end
+    end
+  end
+
+  if #prof_files == 0 then
+    vim.notify("pprof: no profile files found in current directory", vim.log.levels.WARN)
+    return
+  end
+
+  if #prof_files == 1 then
+    do_load(prof_files[1], launch)
+    return
+  end
+
+  vim.ui.select(prof_files, { prompt = "Select profile:" }, function(choice)
+    if choice then
+      do_load(choice, launch)
+    end
+  end)
 end
 
 --- Stop the running pprof web server.
