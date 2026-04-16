@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/nvim-contrib/nvim-pprof/compare/v0.4.0...v0.4.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* add postCreateCommand to restore nix volume permissions ([ad60359](https://github.com/nvim-contrib/nvim-pprof/commit/ad603594ddf4f4679e71c4277325b72ddbee1d0b))
+
 ## [0.4.0](https://github.com/nvim-contrib/nvim-pprof/compare/v0.3.0...v0.4.0) (2026-03-23)
 
 
