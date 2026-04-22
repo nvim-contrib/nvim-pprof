@@ -2,7 +2,7 @@
 
 > Go pprof profiler integration for Neovim
 
-[![test](https://github.com/nvim-contrib/nvim-pprof/actions/workflows/test.yml/badge.svg)](https://github.com/nvim-contrib/nvim-pprof/actions/workflows/test.yml)
+[![CI](https://github.com/nvim-contrib/nvim-pprof/actions/workflows/ci.yml/badge.svg)](https://github.com/nvim-contrib/nvim-pprof/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/nvim-contrib/nvim-pprof?include_prereleases)](https://github.com/nvim-contrib/nvim-pprof/releases)
 [![License](https://img.shields.io/github/license/nvim-contrib/nvim-pprof)](LICENSE)
 [![Neovim](https://img.shields.io/badge/Neovim-0.11%2B-blueviolet?logo=neovim&logoColor=white)](https://neovim.io)
@@ -54,12 +54,12 @@ By default the plugin searches for profile files in the current working
 directory using the patterns `cpu.prof`, `mem.prof`, `*.prof`, `*.pprof`.
 Override with the `file` option if your tool writes elsewhere.
 
-| Profile type | Command | Default file |
-| ------------ | ------- | ------------ |
-| CPU (tests)  | `go test -cpuprofile cpu.prof -bench .` | `cpu.prof` |
-| Memory (tests) | `go test -memprofile mem.prof -bench .` | `mem.prof` |
-| Block / mutex | `go test -blockprofile block.prof` | `block.prof` |
-| CPU (live app) | `go tool pprof http://localhost:6060/debug/pprof/profile` | *(pass path directly)* |
+| Profile type   | Command                                                   | Default file           |
+| -------------- | --------------------------------------------------------- | ---------------------- |
+| CPU (tests)    | `go test -cpuprofile cpu.prof -bench .`                   | `cpu.prof`             |
+| Memory (tests) | `go test -memprofile mem.prof -bench .`                   | `mem.prof`             |
+| Block / mutex  | `go test -blockprofile block.prof`                        | `block.prof`           |
+| CPU (live app) | `go tool pprof http://localhost:6060/debug/pprof/profile` | _(pass path directly)_ |
 
 ## Configuration
 
@@ -149,18 +149,18 @@ require("pprof").setup({
 
 ### Commands
 
-| Command                | Description                                                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------------------------- |
-| `:PProfLoad[!] [file]` | Load a profile file. No argument auto-finds in cwd. `!` always shows a picker                       |
-| `:PProfSigns [action]` | Show/hide/toggle heat signs. Default: `toggle`                                                       |
-| `:PProfHints [action]` | Show/hide/toggle inline hints. Default: `toggle`                                                     |
-| `:PProfTop [count]`    | Show top-N functions in a floating window                                                            |
-| `:PProfPeek [func]`    | Show callers/callees. No argument uses treesitter to detect the function at cursor                   |
-| `:PProfQuickfix`       | Populate quickfix list with one entry per profiled file                                              |
-| `:PProfLoclist`        | Populate location list with hotspot lines                                                            |
+| Command                    | Description                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `:PProfLoad[!] [file]`     | Load a profile file. No argument auto-finds in cwd. `!` always shows a picker                                              |
+| `:PProfSigns [action]`     | Show/hide/toggle heat signs. Default: `toggle`                                                                             |
+| `:PProfHints [action]`     | Show/hide/toggle inline hints. Default: `toggle`                                                                           |
+| `:PProfTop [count]`        | Show top-N functions in a floating window                                                                                  |
+| `:PProfPeek [func]`        | Show callers/callees. No argument uses treesitter to detect the function at cursor                                         |
+| `:PProfQuickfix`           | Populate quickfix list with one entry per profiled file                                                                    |
+| `:PProfLoclist`            | Populate location list with hotspot lines                                                                                  |
 | `:PProfServerStart [port]` | Auto-load profile (or reuse cached), start pprof web server, open browser when `browser.open` is true (default port: 8080) |
-| `:PProfServerStop`     | Stop the pprof web server                                                                            |
-| `:PProfClear`          | Clear all profile data, signs, hints, and floats                                                     |
+| `:PProfServerStop`         | Stop the pprof web server                                                                                                  |
+| `:PProfClear`              | Clear all profile data, signs, hints, and floats                                                                           |
 
 ![hints](doc/tapes/output/hints.webp)
 
