@@ -32,14 +32,33 @@ local consumer = function(client)
       return nil
     end
     local patterns = require("pprof.config").opts.file or { "cpu.prof", "mem.prof", "*.prof", "*.pprof" }
-    for _, result in pairs(results) do
+    local seen = {}
+    local dirs = {}
+
+    local function add_dir(d)
+      if d and d ~= "" and not seen[d] then
+        seen[d] = true
+        dirs[#dirs + 1] = d
+      end
+    end
+
+    for id, result in pairs(results) do
+      -- neotest temp output directory
       if result.output then
-        local dir = vim.fn.fnamemodify(result.output, ":h")
-        for _, pat in ipairs(patterns) do
-          local matches = vim.fn.glob(dir .. "/" .. pat, false, true)
-          if #matches > 0 then
-            return matches[1]
-          end
+        add_dir(vim.fn.fnamemodify(result.output, ":h"))
+      end
+      -- package directory from result key (e.g. "/abs/path/suite_test.go::Suite::Spec")
+      local file = id:match("^([^:]+%.go)")
+      if file then
+        add_dir(vim.fn.fnamemodify(file, ":h"))
+      end
+    end
+
+    for _, dir in ipairs(dirs) do
+      for _, pat in ipairs(patterns) do
+        local matches = vim.fn.glob(dir .. "/" .. pat, false, true)
+        if #matches > 0 then
+          return matches[1]
         end
       end
     end
@@ -56,7 +75,7 @@ local consumer = function(client)
         require("pprof").load(path)
       else
         -- Fall back to cwd auto-discovery
-        require("pprof").load()
+        require("pprof").load(nil, { silent = true })
       end
     end)
   end

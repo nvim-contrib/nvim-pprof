@@ -61,8 +61,13 @@ local function do_load(path, on_done)
     end
 
     if list_err then
-      vim.notify("pprof: " .. list_err, vim.log.levels.ERROR)
-      return
+      if list_err:find("no matches found for regexp", 1, true) then
+        list_err = nil
+        list_stdout = ""
+      else
+        vim.notify("pprof: " .. list_err, vim.log.levels.ERROR)
+        return
+      end
     end
 
     if top_err then
@@ -243,8 +248,11 @@ end
 
 --- Load a pprof profile file.
 --- @param path string|nil  path to profile file; if nil, searches cwd using config.file patterns
---- @param use_picker boolean|nil  if true, always show vim.ui.select even for a single match
-function M.load(path, use_picker)
+--- @param opts boolean|{use_picker?: boolean, silent?: boolean}|nil  options or legacy boolean (use_picker)
+function M.load(path, opts)
+  local use_picker = type(opts) == "boolean" and opts or (type(opts) == "table" and opts.use_picker)
+  local silent = type(opts) == "table" and opts.silent
+
   if path and path ~= "" then
     do_load(vim.fn.expand(path))
     return
@@ -264,7 +272,9 @@ function M.load(path, use_picker)
   end
 
   if #prof_files == 0 then
-    vim.notify("pprof: no profile files found in current directory", vim.log.levels.WARN)
+    if not silent then
+      vim.notify("pprof: no profile files found in current directory", vim.log.levels.WARN)
+    end
     return
   end
 
