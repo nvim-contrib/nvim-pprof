@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/nvim-contrib/nvim-pprof/compare/v0.5.0...v0.5.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **neotest:** defer picker to after other consumers run ([98437bb](https://github.com/nvim-contrib/nvim-pprof/commit/98437bb371f3612ba90a016693eec4d463f95722))
+
 ## [0.5.0](https://github.com/nvim-contrib/nvim-pprof/compare/v0.4.1...v0.5.0) (2026-04-22)
 
 
