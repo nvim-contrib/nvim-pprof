@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/nvim-contrib/nvim-pprof/compare/v0.4.1...v0.5.0) (2026-04-22)
+
+
+### Features
+
+* add silent mode and improve profile file discovery ([4c17a34](https://github.com/nvim-contrib/nvim-pprof/commit/4c17a34b29fd838df02ddbbee9550328633a026e))
+* support string[] in load() and simplify neotest/go consumer ([7cfa9d3](https://github.com/nvim-contrib/nvim-pprof/commit/7cfa9d30a932f3dd9eb244acb1f955d29ab72f56))
+
+
+### Bug Fixes
+
+* **neotest/go:** handle empty profile results ([463ccc3](https://github.com/nvim-contrib/nvim-pprof/commit/463ccc33801cbb9e8a2ea8d0f5ff162e858247f7))
+
 ## [0.4.1](https://github.com/nvim-contrib/nvim-pprof/compare/v0.4.0...v0.4.1) (2026-04-16)
 
 
