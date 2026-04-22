@@ -24,45 +24,30 @@
 ---
 --- @type fun(client: table): table
 local consumer = function(client)
-  --- Search neotest result output directories for a profile file.
-  --- @param results table<string, table>
-  --- @return string|nil  absolute path to the first profile file found
+  --- Search neotest result output directories for profile files.
+  --- @param results table<string, neotest.Result>
+  --- @return string[]  absolute paths to all profile files found
   local function find_in_results(results)
     if not results then
-      return nil
+      return {}
     end
     local patterns = require("pprof.config").opts.file or { "cpu.prof", "mem.prof", "*.prof", "*.pprof" }
     local seen = {}
-    local dirs = {}
-
-    local function add_dir(d)
-      if d and d ~= "" and not seen[d] then
-        seen[d] = true
-        dirs[#dirs + 1] = d
-      end
-    end
-
-    for id, result in pairs(results) do
-      -- neotest temp output directory
+    local found = {}
+    for _, result in pairs(results) do
       if result.output then
-        add_dir(vim.fn.fnamemodify(result.output, ":h"))
-      end
-      -- package directory from result key (e.g. "/abs/path/suite_test.go::Suite::Spec")
-      local file = id:match("^([^:]+%.go)")
-      if file then
-        add_dir(vim.fn.fnamemodify(file, ":h"))
-      end
-    end
-
-    for _, dir in ipairs(dirs) do
-      for _, pat in ipairs(patterns) do
-        local matches = vim.fn.glob(dir .. "/" .. pat, false, true)
-        if #matches > 0 then
-          return matches[1]
+        local dir = vim.fn.fnamemodify(result.output, ":h")
+        for _, pat in ipairs(patterns) do
+          for _, m in ipairs(vim.fn.glob(dir .. "/" .. pat, false, true)) do
+            if not seen[m] then
+              seen[m] = true
+              found[#found + 1] = m
+            end
+          end
         end
       end
     end
-    return nil
+    return found
   end
 
   client.listeners.results = function(_, results, partial)
@@ -70,12 +55,18 @@ local consumer = function(client)
       return
     end
     vim.schedule(function()
-      local path = find_in_results(results)
-      if path then
-        require("pprof").load(path)
-      else
+      local paths = find_in_results(results)
+      if #paths == 0 then
         -- Fall back to cwd auto-discovery
         require("pprof").load(nil, { silent = true })
+      elseif #paths == 1 then
+        require("pprof").load(paths[1])
+      else
+        vim.ui.select(paths, { prompt = "Select profile:" }, function(choice)
+          if choice then
+            require("pprof").load(choice)
+          end
+        end)
       end
     end)
   end
