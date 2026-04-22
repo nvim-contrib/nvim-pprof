@@ -57,6 +57,10 @@ local consumer = function(client)
 
 		vim.schedule(function()
 			local paths = find_in_results(results)
+			if #paths == 0 then
+				return
+			end
+
 			require("pprof").load(paths, { silent = true, use_picker = #paths > 1 })
 		end)
 	end
