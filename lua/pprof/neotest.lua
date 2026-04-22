@@ -17,7 +17,9 @@ local consumer = function(client)
       return
     end
     vim.schedule(function()
-      require("pprof").load(nil, { silent = true })
+      vim.schedule(function()
+        require("pprof").load(nil, { silent = true })
+      end)
     end)
   end
   return {}
