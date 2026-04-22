@@ -246,27 +246,46 @@ function M.setup(opts)
   register_autocmds()
 end
 
+--- Resolve a string or single-element list to one expanded path, else nil.
+--- @param path string|string[]|nil
+--- @return string|nil
+local function resolve_file(path)
+  if type(path) == "string" and path ~= "" then
+    return vim.fn.expand(path)
+  end
+  if type(path) == "table" and #path == 1 then
+    return vim.fn.expand(path[1])
+  end
+  return nil
+end
+
 --- Load a pprof profile file.
---- @param path string|nil  path to profile file; if nil, searches cwd using config.file patterns
+--- @param path string|string[]|nil  path(s) to profile file; if nil, searches cwd using config.file patterns
 --- @param opts boolean|{use_picker?: boolean, silent?: boolean}|nil  options or legacy boolean (use_picker)
 function M.load(path, opts)
   local use_picker = type(opts) == "boolean" and opts or (type(opts) == "table" and opts.use_picker)
   local silent = type(opts) == "table" and opts.silent
 
-  if path and path ~= "" then
-    do_load(vim.fn.expand(path))
+  local single = resolve_file(path)
+  if single then
+    do_load(single)
     return
   end
 
-  local patterns = config.opts.file or { "*.prof", "*.pprof" }
-  local cwd = vim.fn.getcwd()
-  local seen = {}
-  local prof_files = {}
-  for _, pat in ipairs(patterns) do
-    for _, f in ipairs(vim.fn.glob(cwd .. "/" .. pat, false, true)) do
-      if not seen[f] then
-        seen[f] = true
-        prof_files[#prof_files + 1] = f
+  local prof_files
+  if type(path) == "table" then
+    prof_files = path
+  else
+    local patterns = config.opts.file or { "*.prof", "*.pprof" }
+    local cwd = vim.fn.getcwd()
+    local seen = {}
+    prof_files = {}
+    for _, pat in ipairs(patterns) do
+      for _, f in ipairs(vim.fn.glob(cwd .. "/" .. pat, false, true)) do
+        if not seen[f] then
+          seen[f] = true
+          prof_files[#prof_files + 1] = f
+        end
       end
     end
   end
