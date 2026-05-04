@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/nvim-contrib/nvim-pprof/compare/v0.5.1...v0.5.2) (2026-05-04)
+
+
+### Bug Fixes
+
+* **github:** correct action versions in update.yml ([8c57cb7](https://github.com/nvim-contrib/nvim-pprof/commit/8c57cb7c163df006d6e12214db6091f47bf18f6d))
+
 ## [0.5.1](https://github.com/nvim-contrib/nvim-pprof/compare/v0.5.0...v0.5.1) (2026-04-22)
 
 
