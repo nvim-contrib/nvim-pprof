@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/nvim-contrib/nvim-pprof/compare/v0.5.2...v0.5.3) (2026-11-07)
+
+
+### Bug Fixes
+
+* **ci:** merge with the App token so main gets its CI run ([#48](https://github.com/nvim-contrib/nvim-pprof/issues/48)) ([50b2133](https://github.com/nvim-contrib/nvim-pprof/commit/50b21331c81127156d5760b212bb2f5d98c9848e))
+
 ## [0.5.2](https://github.com/nvim-contrib/nvim-pprof/compare/v0.5.1...v0.5.2) (2026-05-04)
 
 
